@@ -1,6 +1,6 @@
 {
   "name": "numericsystem",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A flexible, generalized numerical system for computing game values.",
   "main": "index.js",
   "scripts": {
