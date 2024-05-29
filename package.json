@@ -1,0 +1,19 @@
+{
+  "name": "numericsystem",
+  "version": "1.0.0",
+  "description": "A flexible, generalized numerical system for computing game values.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dlqw/NumericSystem.git"
+  },
+  "author": "rdququ",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dlqw/NumericSystem/issues"
+  },
+  "homepage": "https://github.com/dlqw/NumericSystem#readme"
+}

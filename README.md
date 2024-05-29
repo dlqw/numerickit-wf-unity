@@ -2,6 +2,11 @@
 
 A flexible, generalized numerical system for computing game values.
 
+## Install
+
+- npm: `npm i numericsystem`
+- github: [dlqw/NumericSystem：用于计算游戏值的灵活、通用的数值系统。 --- dlqw/NumericSystem: A flexible, generalized numerical system for computing game values. (github.com)](https://github.com/dlqw/NumericSystem)
+
 ## 使用方法
 
 ### Numeric
