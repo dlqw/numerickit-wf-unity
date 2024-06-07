@@ -4,14 +4,14 @@ using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Framework.NumericSystem
+namespace Framework.Utility.NumericSystem
 {
     public class Numeric
     {
         [ShowInInspector] public LinkedList<NumericModifier> ModifierCollector = new();
         protected bool HasUpdate;
 
-        public virtual void AddModifier(NumericModifier modifier)
+        protected virtual void AddModifier(NumericModifier modifier)
         {
             ModifierCollector ??= new LinkedList<NumericModifier>();
             var isExist = false;
@@ -28,7 +28,7 @@ namespace Framework.NumericSystem
             UpdateFinalValue();
         }
 
-        public virtual void RemoveModifier(NumericModifier modifier)
+        protected virtual void RemoveModifier(NumericModifier modifier)
         {
             if (!ModifierCollector.Remove(modifier))
             {
@@ -39,6 +39,31 @@ namespace Framework.NumericSystem
                     if (numericModifier.count <= 0) ModifierCollector.Remove(numericModifier);
                     break;
                 }
+            }
+
+            HasUpdate = true;
+            UpdateFinalValue();
+        }
+
+        /// <summary>
+        /// 清除所有暂时的数值变化
+        /// </summary>
+        public void ClearModifier()
+        {
+            ModifierCollector.Clear();
+            HasUpdate = true;
+            UpdateFinalValue();
+        }
+
+        /// <summary>
+        /// 清除所有包含该 Tag 的暂时的数值变化
+        /// </summary>
+        /// <param name="tag"></param>
+        public void ClearModifier(string tag)
+        {
+            foreach (var modifier in ModifierCollector.Where(modifier => modifier.tags.Contains(tag)))
+            {
+                ModifierCollector.Remove(modifier);
             }
 
             HasUpdate = true;
@@ -77,7 +102,18 @@ namespace Framework.NumericSystem
     [Serializable]
     public class IntNumeric : Numeric
     {
-        public int basicValue;
+        [SerializeField] private int basicValue;
+
+        public int BasicValue
+        {
+            get => basicValue;
+            set
+            {
+                basicValue = value;
+                HasUpdate = true;
+            }
+        }
+
         [SerializeField] private int finalValue;
         private int lastFinalValue;
 
@@ -148,21 +184,33 @@ namespace Framework.NumericSystem
             return numeric;
         }
 
-        public static IntNumeric operator -(IntNumeric numeric, (int, string, string) value)
+        public static IntNumeric operator -(IntNumeric numeric, (int, string, string[]) value)
         {
             numeric.RemoveModifier(new IntNumericModifier(value.Item1, value.Item2, value.Item3));
             return numeric;
         }
-        
+
         public static IntNumeric operator *(IntNumeric numeric, FractionNumericModifier modifier)
         {
             numeric.AddModifier(modifier);
             return numeric;
         }
-        
+
+        public static IntNumeric operator *(IntNumeric numeric, (int, int) value)
+        {
+            numeric.AddModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
+            return numeric;
+        }
+
         public static IntNumeric operator /(IntNumeric numeric, FractionNumericModifier modifier)
         {
             numeric.RemoveModifier(modifier);
+            return numeric;
+        }
+
+        public static IntNumeric operator /(IntNumeric numeric, (int, int) value)
+        {
+            numeric.RemoveModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
             return numeric;
         }
 
@@ -188,7 +236,18 @@ namespace Framework.NumericSystem
     [Serializable]
     public class FloatNumeric : Numeric
     {
-        public float basicValue;
+        [SerializeField] private float basicValue;
+
+        public float BasicValue
+        {
+            get => basicValue;
+            set
+            {
+                basicValue = value;
+                HasUpdate = true;
+            }
+        }
+
         [SerializeField] private float finalValue;
         private float lastFinalValue;
 
@@ -264,16 +323,28 @@ namespace Framework.NumericSystem
             numeric.RemoveModifier(new FloatNumericModifier(value.Item1, value.Item2, value.Item3));
             return numeric;
         }
-        
+
         public static FloatNumeric operator *(FloatNumeric numeric, FractionNumericModifier modifier)
         {
             numeric.AddModifier(modifier);
             return numeric;
         }
-        
+
+        public static FloatNumeric operator *(FloatNumeric numeric, (int, int) value)
+        {
+            numeric.AddModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
+            return numeric;
+        }
+
         public static FloatNumeric operator /(FloatNumeric numeric, FractionNumericModifier modifier)
         {
             numeric.RemoveModifier(modifier);
+            return numeric;
+        }
+
+        public static FloatNumeric operator /(FloatNumeric numeric, (int, int) value)
+        {
+            numeric.RemoveModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
             return numeric;
         }
 
@@ -299,7 +370,18 @@ namespace Framework.NumericSystem
     [Serializable]
     public class GenericNumeric<T> : Numeric where T : CustomDataStructure, new()
     {
-        public T basicValue;
+        [SerializeField] private T basicValue;
+
+        public T BasicValue
+        {
+            get => basicValue;
+            set
+            {
+                basicValue = value;
+                HasUpdate = true;
+            }
+        }
+
         [SerializeField] private T finalValue;
         private T lastFinalValue;
 
@@ -346,7 +428,7 @@ namespace Framework.NumericSystem
             return numeric;
         }
 
-        public static GenericNumeric<T> operator +(GenericNumeric<T> numeric, (T, string, string) value)
+        public static GenericNumeric<T> operator +(GenericNumeric<T> numeric, (T, string, string[]) value)
         {
             numeric.AddModifier(new GenericNumericModifier<T>(value.Item1, value.Item2, value.Item3));
             return numeric;
@@ -370,21 +452,33 @@ namespace Framework.NumericSystem
             return numeric;
         }
 
-        public static GenericNumeric<T> operator -(GenericNumeric<T> numeric, (T, string, string) value)
+        public static GenericNumeric<T> operator -(GenericNumeric<T> numeric, (T, string, string[]) value)
         {
             numeric.RemoveModifier(new GenericNumericModifier<T>(value.Item1, value.Item2, value.Item3));
             return numeric;
         }
-        
+
         public static GenericNumeric<T> operator *(GenericNumeric<T> numeric, FractionNumericModifier modifier)
         {
             numeric.AddModifier(modifier);
             return numeric;
         }
-        
+
+        public static GenericNumeric<T> operator *(GenericNumeric<T> numeric, (int, int) value)
+        {
+            numeric.AddModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
+            return numeric;
+        }
+
         public static GenericNumeric<T> operator /(GenericNumeric<T> numeric, FractionNumericModifier modifier)
         {
             numeric.RemoveModifier(modifier);
+            return numeric;
+        }
+
+        public static GenericNumeric<T> operator /(GenericNumeric<T> numeric, (int, int) value)
+        {
+            numeric.RemoveModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
             return numeric;
         }
 

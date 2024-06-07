@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Linq;
+using Framework.NumericSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Framework.NumericSystem
+namespace Framework.Utility.NumericSystem
 {
     [Serializable]
     public abstract class NumericModifier
     {
-        public string[] tags = Array.Empty<string>();
+        [LabelText("Tag")] public string[] tags = Array.Empty<string>();
         public string name = "";
-        public int count = 1;
+        [LabelText("叠加数量")] public int count = 1;
 
         public virtual void ApplyModifier(ref int input, int source, Numeric numeric)
         {
@@ -70,8 +71,8 @@ namespace Framework.NumericSystem
     [Serializable]
     public class IntNumericModifier : AdditionNumericModifier, IDescription
     {
-        public readonly int Value;
-        [ShowInInspector] public string DescribeString => $"整型修正器:{Value}";
+        public int value;
+        [ShowInInspector] public string DescribeString => $"整型修正器:{value}";
 
         public IntNumericModifier()
         {
@@ -79,21 +80,21 @@ namespace Framework.NumericSystem
 
         public IntNumericModifier(int value)
         {
-            Value = value;
+            this.value = value;
             name = "";
             tags = Array.Empty<string>();
         }
 
         public IntNumericModifier(int value, string name)
         {
-            Value = value;
+            this.value = value;
             this.name = name;
             tags = Array.Empty<string>();
         }
 
         public IntNumericModifier(int value, string name = "", params string[] inputTags)
         {
-            Value = value;
+            this.value = value;
             this.name = name;
             tags = inputTags;
         }
@@ -115,12 +116,12 @@ namespace Framework.NumericSystem
 
         public override void ApplyModifier(ref int input, int source, Numeric numeric)
         {
-            input += Value * count;
+            input += value * count;
         }
 
         public override bool WeakEquals(NumericModifier other)
         {
-            return other is IntNumericModifier intNumericModifier && Value == intNumericModifier.Value &&
+            return other is IntNumericModifier intNumericModifier && value == intNumericModifier.value &&
                    name == intNumericModifier.name;
         }
     }
@@ -205,6 +206,13 @@ namespace Framework.NumericSystem
         protected readonly int Denominator;
         protected readonly int Numerator;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="numerator">分子</param>
+        /// <param name="denominator">分母</param>
+        /// <param name="name"></param>
+        /// <param name="tags"></param>
         protected FractionNumericModifier(int numerator, int denominator, string name = "", params string[] tags)
         {
             Numerator = numerator;
@@ -223,6 +231,13 @@ namespace Framework.NumericSystem
     {
         public string DescribeString => $"覆盖分数修正器:{Numerator}/{Denominator}";
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="numerator">分子</param>
+        /// <param name="denominator">分母</param>
+        /// <param name="name"></param>
+        /// <param name="tag"></param>
         public OverrideFractionNumericModifier(int numerator, int denominator, string name = "", params string[] tag) :
             base(numerator,
                 denominator, name, tag)
@@ -307,7 +322,7 @@ namespace Framework.NumericSystem
 
                     if (exist)
                     {
-                        result += intNumericModifier.Value * intNumericModifier.count * factor;
+                        result += intNumericModifier.value * intNumericModifier.count * factor;
                     }
                 }
             }
@@ -340,6 +355,13 @@ namespace Framework.NumericSystem
     {
         public string DescribeString => $"增量分数修正器:{Numerator}/{Denominator}";
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="numerator">分子</param>
+        /// <param name="denominator">分母</param>
+        /// <param name="name"></param>
+        /// <param name="tag"></param>
         public IncreaseFractionNumericModifier(int numerator, int denominator, string name = "", params string[] tag) :
             base(numerator,
                 denominator, name, tag)
@@ -417,7 +439,7 @@ namespace Framework.NumericSystem
 
                     if (exist)
                     {
-                        result += (int)(intNumericModifier.Value * intNumericModifier.count * factor);
+                        result += (int)(intNumericModifier.value * intNumericModifier.count * factor);
                     }
                 }
             }

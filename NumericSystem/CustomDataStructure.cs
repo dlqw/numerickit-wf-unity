@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using UnityEngine;
 
-namespace Framework.NumericSystem
+namespace Framework.Utility.NumericSystem
 {
     public abstract class CustomDataStructure
     {
