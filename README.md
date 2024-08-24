@@ -1,142 +1,250 @@
-# NumericSystem
+<h1 style="text-align:center">
+  Numeric System
+</h1>
+<p style="text-align:center">
+  HuaYe Studio rdququ
+</p>
 
-A flexible, generalized numerical system for computing game values.
+<p style="text-align:center">
+<img alt="Static Badge" src="https://img.shields.io/badge/field-gameplay-red">
+<img src="https://img.shields.io/badge/script-csharp-yellow">
+<img src="https://img.shields.io/badge/dotnet-Standard 2.1-green">
+<img src="https://img.shields.io/badge/framework-WFramework-blue">
+<img alt="Static Badge" src="https://img.shields.io/badge/readme-%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3-red?link=https%3A%2F%2Fgithub.com%2Fdlqw%2FNumericSystem%2Fblob%2Fmain%2FREADME_CN.md">
+</p>
 
-## Install
+## Introduction
 
-- npm: `npm i numericsystem`
-- github: [dlqw/NumericSystem：用于计算游戏值的灵活、通用的数值系统。 --- dlqw/NumericSystem: A flexible, generalized numerical system for computing game values. (github.com)](https://github.com/dlqw/NumericSystem)
+The Numeric System is a toolset designed to address the numerical needs of gameplay, aiming to provide a simple and efficient solution for handling combat system calculations.
 
-## 使用方法
+- **Event Store-based Numeric Change Tracking:** Ensures traceability, easy self-verification, and security of original data.
+- **Fixed-point Arithmetic:** Guarantees numerical consistency across platforms and devices, enhancing network synchronization reliability.
+- **Simple Syntax:** Supports the addition of integers, floating points, fractions, or percentages to numerical values using addition, multiplication, or custom modifiers.
 
-### Numeric
+## Table of Contents
 
-#### basicValue
+- [Introduction](#introduction)
+- [Table of Contents](#table-of-contents)
+- [Download and Deployment](#download-and-deployment)
+  - [Get from GitHub](#get-from-github)
+  - [Get from npm](#get-from-npm)
+- [Getting Started](#getting-started)
+  - [Creating the First Numeric](#creating-the-first-numeric)
+  - [Attaching `AdditionNumericModifier` to Numeric](#attaching-additionnumericmodifier-to-numeric)
+  - [Getting the Final Value of Numeric](#getting-the-final-value-of-numeric)
+  - [Using Multiplication Modifiers(`FractionNumericModifier`)](#using-multiplication-modifiersfractionnumericmodifier)
+  - [Modifiers' Name, Tags, and Count](#modifiers-name-tags-and-count)
+  - [Using Tags to Partially Modify Base Values](#using-tags-to-partially-modify-base-values)
+  - [Using Custom Modifiers](#using-custom-modifiers)
+- [File Path Description](#file-path-description)
+- [Author](#author)
+- [License](#license)
 
-某一属性的基础值，可读，可写，用于写入永久数值变化
+## Download and Deployment
 
-#### finalValue
+### Get from GitHub
 
-某一属性的最终值，只可读，用于获取经过暂时数值变化修饰的数值的最终值
-
-#### ModifierCollector
-
-数值修饰器的链表，用于存贮暂时的数值变化
-
-### NumericModifier
-
-#### name
-
-string 数值修正器的名字
-
-#### count
-
-int 同一数值修正器的数量
-
-#### tag
-
-string[]
-
-- 对于加法修饰器，表示收那些乘法修正器影响
-- 对于乘法修正器，表示可以修饰哪些加法修正器（或 basicValue）basicValue 对应的 tag 是 “self”
-
-#### 其他
-
-修正器的比较通过方法 `WeakEquals` 实现，比较的基准是 类型，值和名字
-
-注意，对 tag 的修改会改变所有同名同值同类型的修饰器
-
-### 情境和案例
-
-#### 基础用法展示
+```shell
+git clone git@github.com:dlqw/NumericSystem.git
 
 ```
-    public IntNumeric health = new();
-    public FloatNumeric speed = new();
 
-    [Button]
-    public void AddHealthBuff()
-    {
-        health.AddModifier(new IntNumericModifier(10, "治疗术"));
-        health += new IntNumericModifier(10);
-        health = health + new IntNumericModifier(10, "治疗术");
-        health += (10, "治疗术");
-        health += 10;
-        health += new IntNumericModifier(10);
-    }
+### Get from npm
+
+```shell
+npm i numericsystem
 ```
 
-#### 数值常见和初始化
+## Getting Started
 
-```
-    public void CreateAndInit()
-    {
-        IntNumeric intNumeric = new();
-        IntNumeric intNumeric2 = new(100);
-        var intNumeric3 = new IntNumeric(100);
-        IntNumeric intNumeric4 = 100;
-        // 这里传入的参数是 basicValue
-    }
+### Creating the First Numeric
+
+To use the tool, you need to reference `WFramework.CoreGameDevKit.NumericSystem;`
+
+```csharp
+using WFramework.CoreGameDevKit.NumericSystem;
 ```
 
-#### 永久改变值
+You can manually create a Numeric object and pass an integer or floating point number to its constructor.
 
-```
-    public IntNumeric health = new();
-
-    public void ChangeValueForever()
-    {
-        health.basicValue = 100;
-        health.basicValue += 10;
-        health.basicValue %= 10;
-    }
+```csharp
+Numeric health = new Numeric(100);
 ```
 
-#### 暂时改变值/加减修正器
+This value (100 in the example above) acts as the base value of the Numeric object and is read-only. You can retrieve its value using GetOriginValue(). To change this base value, create a new Numeric object.
 
-```
-        IntNumeric health = new();
-        health.AddModifier(new IntNumericModifier()); //无意义
-        health.AddModifier(new IntNumericModifier(10));
-        health.AddModifier(new IntNumericModifier(10, "圣光术"));
-        health.AddModifier(new IntNumericModifier(10, "圣光术", "self"));
-        health.AddModifier(new IntNumericModifier(10, "圣光术", "self", "装备"));
-        health += 10;
-        health += (10, "圣光术");
-        health += (10, "圣光术", "self");
+```csharp
+// Get original/base value
+var healthBasicValue = health.GetOriginValue();
 
-        health.RemoveModifier(new IntNumericModifier()); //无意义
-        health.RemoveModifier(new IntNumericModifier(10));
-        health.RemoveModifier(new IntNumericModifier(10, "圣光术"));
-        health.RemoveModifier(new IntNumericModifier(10, "圣光术", "self"));
-        health.RemoveModifier(new IntNumericModifier(10, "圣光术", "self", "装备"));
-        health -= 10;
-        health -= (10, "圣光术");
-        health -= (10, "圣光术", "self");
-    }
+// Change the base value => Create a new Numeric object
+health = new Numeric(200);
 ```
 
-#### 百分比增强
+Alternatively, you can assign an integer or floating-point number to a Numeric object to create a new one.
 
-##### 覆盖分数修正器的使用
+```csharp
+Numeric health = 100;
+Debug.Log(health.GetHashCode()); // 402183648
 
-覆盖分数修正器会计算目标加法修正器和基础值与本修正器的值的乘积，并覆盖原来的值。如 原本为 10，经过 1/2 覆盖修正后为 5
-
-##### 增量分数修正器的使用
-
-增量分数修正器不会覆盖原本的值而是在其基础上增加新的值.如 原本为 10，经过 1/2 增量修正后为 15
-
-##### 使用办法
-
-```
-        health.AddModifier(new IncreaseFractionNumericModifier(1, 2, "修改圣光术", "圣光术"));
-        health.RemoveModifier(new IncreaseFractionNumericModifier(1, 2, "修改圣光术", "圣光术"));
-        health.AddModifier(new OverrideFractionNumericModifier(1, 2, "修改圣光术", "圣光术"));
-        health.RemoveModifier(new OverrideFractionNumericModifier(1, 2, "修改圣光术", "圣光术"));
-        health *= new IncreaseFractionNumericModifier(1, 2, "修改圣光术", "圣光术");
-        health /= new IncreaseFractionNumericModifier(1, 2, "修改圣光术", "圣光术");
-        health *= new OverrideFractionNumericModifier(1, 2, "修改圣光术", "圣光术");
-        health /= new OverrideFractionNumericModifier(1, 2, "修改圣光术", "圣光术");
+health = 100.67f;
+Debug.Log(health.GetHashCode()); // 1146914344
 ```
 
-这里的 \* 和 / 分别是 add 和 remove
+Note that in this case, health now points to a newly allocated Numeric object.
+
+### Attaching `AdditionNumericModifier` to Numeric
+
+You can manually create an addition modifier using `AdditionNumericModifier`. The internal value of the modifier is immutable and can be accessed through `StoreValue`.
+
+```csharp
+AdditionNumericModifier strongBuff = new AdditionNumericModifier(20);
+var buffValue = strongBuff.StoreValue;
+```
+
+Alternatively, you can quickly create it using integers or floating-point numbers.
+
+```csharp
+AdditionNumericModifier strongBuff = 20f;
+```
+
+To attach a `NumericModifier` to a Numeric object, use the `AddModifier` method or the addition operator. The following examples illustrate valid usage:
+
+```csharp
+// Success
+health.AddModifier(strongBuff);
+health = health + 20;
+health += 20;
+health = health + strongBuff;
+health += strongBuff;
+
+// Error
+health.AddModifier(20);
+```
+
+Removing a modifier follows similar syntax, using the `RemoveModifier` method or the subtraction operator.
+
+**Important**: Avoid mixing these two:
+
+```csharp
+health += -20;
+health -= 20;
+```
+
+The first example attaches a modifier with a value of -20, while the second removes a modifier with a value of 20.
+
+**Important**: Do not attach the same modifier multiple times without removing it first. You can use overloaded addition and subtraction operators to create temporary modifier objects.
+
+**Important**: Avoid mixing integers and floating-point numbers in the same Numeric object. The Numeric System is designed to work with either `int -> int` or `float -> float`, depending on your needs.
+
+### Getting the Final Value of Numeric
+
+You can obtain the final value by calling `FinalValue` or `FinalValueF`, which return the result as an integer or floating-point number, respectively.
+
+```csharp
+Numeric health = 100;
+
+health += 20.3f;
+
+Debug.Log(health.FinalValue);
+Debug.Log(health.FinalValueF);
+```
+
+### Using Multiplication Modifiers(`FractionNumericModifier`)
+
+Multiplication modifiers are slightly more complex, but you can still construct, attach, or remove them in a similar way.
+
+```csharp
+health.AddModifier(new FractionNumericModifier(1, 2, FractionNumericModifier.FractionType.Increase));
+health *= (200, FractionNumericModifier.FractionType.Override);
+
+health.RemoveModifier(new FractionNumericModifier(1, 2, FractionNumericModifier.FractionType.Increase));
+health /= (200, FractionNumericModifier.FractionType.Override);
+```
+
+You can build multiplication modifiers using (`numerator:int`, `denominator:int`, `type:FractionNumericModifier.FractionType`). You can either directly create the object or use C# tuple syntax, which offers clarity or convenience, depending on your preference.
+
+Here are two types of multiplication modifiers:
+
+```csharp
+public enum FractionType
+{
+    Override, // Replace the original value
+    Increase, // Increment based on the original value
+}
+```
+
+An increment modifier will add a new value to the original, while a replace modifier directly sets the new value. For example, if the original value is 100 and the increment modifier is `2/1`, the result will be 300, whereas the replace modifier will yield 200.
+
+The formulas are as follows:
+
+$$ Increase = (1 + (\frac{numerator}{denominator})) \times Input $$
+$$ Override = (\frac{numerator}{denominator}) \times Input$$
+
+### Modifiers' Name, Tags, and Count
+
+All modifiers have overloaded constructors that include `Name:string`, `Tags:string[]`, and `Count:int`. The `Name` serves as a unique identifier. If you attach a modifier with the same `Name`, it will accumulate its Count and replace the previous one.
+
+Anonymous modifiers are named "DEFAULT MODIFIER."
+
+The purpose of `Tags` will be detailed in the [next section](#using-tags-to-partially-modify-base-values).
+
+`Count` is an internal counter for stacking modifiers.
+
+### Using Tags to Partially Modify Base Values
+
+Tags apply to addition modifiers, multiplication modifiers, and the base value of a Numeric object. Addition modifiers with specific Tags indicate which multiplication modifiers will affect them. Similarly, Numeric base values have a default tag of "SELF".
+
+Multiplication modifiers' Tags define which addition modifiers or base values they will affect.
+
+```csharp
+Numeric health = 100;
+
+health += (20, new[] { "Equipment" }, "Armor", 1);
+Debug.Log(health.FinalValue); // 120
+health *= (120, FractionNumericModifier.FractionType.Override, new[] { "Equipment" }, "Armor Upgrade", 1);
+Debug.Log(health.FinalValue); // 124
+health *= (50, FractionNumericModifier.FractionType.Increase, new[] { NumericModifier.TagSelf }, "Upgrade", 1);
+Debug.Log(health.FinalValue); // 174
+```
+
+### Using Custom Modifiers
+
+Custom modifiers are invoked at the end of the calculation pipeline and can enforce specific constraints. For example, to limit a player's health, you can create a `Func<int,int>` or `Func<float,float>` that takes the target value as input and returns the constrained result.
+
+```csharp
+Numeric health = 100;
+
+Func<int, int> healthLimit = value => Mathf.Clamp(value, 0, 150);
+
+health.AddModifier(new CustomNumericModifier(healthLimit));
+health -= healthLimit;
+health += new CustomNumericModifier(healthLimit);
+```
+
+In this example, the player's health is constrained between 0 and 150. The creation and attachment of `CustomNumericModifier` are similar to other modifiers, including implicit type conversions and operator overloads (`+`, `-`).
+
+Important: Do not attach conflicting conditions to the same `Numeric` object, as the final outcome may be undefined.
+
+## File Path Description
+
+```shell
+NumericSystem
+├── .gitignore
+├── README.md
+├── package.json
+├── src
+│   └── NumericSystem
+│       ├── FixedPoint.cs
+│       ├── Numeric.cs
+│       └── NumericModifier.cs
+└── LICENSE
+```
+
+## Author
+
+[rdququ](https://github.com/dlqw)
+
+## License
+
+This project is released under the [MIT License](./LICENSE)
