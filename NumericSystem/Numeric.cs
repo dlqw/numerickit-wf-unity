@@ -2,502 +2,142 @@
 using System.Collections.Generic;
 using System.Linq;
 using Sirenix.OdinInspector;
-using UnityEngine;
 
-namespace Framework.Utility.NumericSystem
+namespace WFramework.CoreGameDevKit.NumericSystem
 {
+    [Serializable]
+    [ShowInInspector]
     public class Numeric
     {
-        [ShowInInspector] public LinkedList<NumericModifier> ModifierCollector = new();
-        protected bool HasUpdate;
+        [ShowInInspector] private readonly int originalValue;
 
-        protected virtual void AddModifier(NumericModifier modifier)
-        {
-            ModifierCollector ??= new LinkedList<NumericModifier>();
-            var isExist = false;
-            foreach (var target in ModifierCollector.Where(target => target.WeakEquals(modifier)))
-            {
-                target.count += modifier.count;
-                target.tags = modifier.tags;
-                isExist = true;
-                break;
-            }
+        private int finalValue;
 
-            if (!isExist) ModifierCollector.AddLast(modifier);
-            HasUpdate = true;
-            UpdateFinalValue();
-        }
-
-        protected virtual void RemoveModifier(NumericModifier modifier)
-        {
-            if (!ModifierCollector.Remove(modifier))
-            {
-                foreach (var numericModifier in ModifierCollector.Where(numericModifier =>
-                             numericModifier.WeakEquals(modifier)))
-                {
-                    numericModifier.count -= 1;
-                    if (numericModifier.count <= 0) ModifierCollector.Remove(numericModifier);
-                    break;
-                }
-            }
-
-            HasUpdate = true;
-            UpdateFinalValue();
-        }
-
-        /// <summary>
-        /// 清除所有暂时的数值变化
-        /// </summary>
-        public void ClearModifier()
-        {
-            ModifierCollector.Clear();
-            HasUpdate = true;
-            UpdateFinalValue();
-        }
-
-        /// <summary>
-        /// 清除所有包含该 Tag 的暂时的数值变化
-        /// </summary>
-        /// <param name="tag"></param>
-        public void ClearModifier(string tag)
-        {
-            foreach (var modifier in ModifierCollector.Where(modifier => modifier.tags.Contains(tag)))
-            {
-                ModifierCollector.Remove(modifier);
-            }
-
-            HasUpdate = true;
-            UpdateFinalValue();
-        }
-
-        public static Numeric operator +(Numeric numeric, NumericModifier modifier)
-        {
-            numeric.AddModifier(modifier);
-            return numeric;
-        }
-
-        public static Numeric operator -(Numeric numeric, NumericModifier modifier)
-        {
-            numeric.RemoveModifier(modifier);
-            return numeric;
-        }
-
-        public static Numeric operator *(Numeric numeric, FractionNumericModifier modifier)
-        {
-            numeric.AddModifier(modifier);
-            return numeric;
-        }
-
-        public static Numeric operator /(Numeric numeric, FractionNumericModifier modifier)
-        {
-            numeric.RemoveModifier(modifier);
-            return numeric;
-        }
-
-        protected virtual void UpdateFinalValue()
-        {
-        }
-    }
-
-    [Serializable]
-    public class IntNumeric : Numeric
-    {
-        [SerializeField] private int basicValue;
-
-        public int BasicValue
-        {
-            get => basicValue;
-            set
-            {
-                basicValue = value;
-                HasUpdate = true;
-            }
-        }
-
-        [SerializeField] private int finalValue;
-        private int lastFinalValue;
-
+        [ShowInInspector]
         public int FinalValue
         {
             get
             {
-                UpdateFinalValue();
+                Update();
                 return finalValue;
             }
         }
 
-        public IntNumeric(int basicValue)
-        {
-            this.basicValue = basicValue;
-            finalValue = basicValue;
-            lastFinalValue = basicValue;
-        }
-
-        public IntNumeric()
-        {
-        }
-
-        public static implicit operator IntNumeric(int value)
-        {
-            return new IntNumeric(value);
-        }
-
-        public static IntNumeric operator +(IntNumeric numeric, IntNumericModifier modifier)
-        {
-            numeric.AddModifier(modifier);
-            return numeric;
-        }
-
-        public static IntNumeric operator +(IntNumeric numeric, int value)
-        {
-            numeric.AddModifier(new IntNumericModifier(value));
-            return numeric;
-        }
-
-        public static IntNumeric operator +(IntNumeric numeric, (int, string) value)
-        {
-            numeric.AddModifier(new IntNumericModifier(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        public static IntNumeric operator +(IntNumeric numeric, (int, string, string[]) value)
-        {
-            numeric.AddModifier(new IntNumericModifier(value.Item1, value.Item2, value.Item3));
-            return numeric;
-        }
-
-        public static IntNumeric operator -(IntNumeric numeric, IntNumericModifier modifier)
-        {
-            numeric.RemoveModifier(modifier);
-            return numeric;
-        }
-
-        public static IntNumeric operator -(IntNumeric numeric, int value)
-        {
-            numeric.RemoveModifier(new IntNumericModifier(value));
-            return numeric;
-        }
-
-        public static IntNumeric operator -(IntNumeric numeric, (int, string) value)
-        {
-            numeric.RemoveModifier(new IntNumericModifier(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        public static IntNumeric operator -(IntNumeric numeric, (int, string, string[]) value)
-        {
-            numeric.RemoveModifier(new IntNumericModifier(value.Item1, value.Item2, value.Item3));
-            return numeric;
-        }
-
-        public static IntNumeric operator *(IntNumeric numeric, FractionNumericModifier modifier)
-        {
-            numeric.AddModifier(modifier);
-            return numeric;
-        }
-
-        public static IntNumeric operator *(IntNumeric numeric, (int, int) value)
-        {
-            numeric.AddModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        public static IntNumeric operator /(IntNumeric numeric, FractionNumericModifier modifier)
-        {
-            numeric.RemoveModifier(modifier);
-            return numeric;
-        }
-
-        public static IntNumeric operator /(IntNumeric numeric, (int, int) value)
-        {
-            numeric.RemoveModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        protected override void UpdateFinalValue()
-        {
-            if (!HasUpdate)
-            {
-                finalValue = lastFinalValue;
-                return;
-            }
-
-            finalValue = basicValue;
-            foreach (var modifier in ModifierCollector)
-            {
-                modifier.ApplyModifier(ref finalValue, basicValue, this);
-            }
-
-            lastFinalValue = finalValue;
-            HasUpdate = false;
-        }
-    }
-
-    [Serializable]
-    public class FloatNumeric : Numeric
-    {
-        [SerializeField] private float basicValue;
-
-        public float BasicValue
-        {
-            get => basicValue;
-            set
-            {
-                basicValue = value;
-                HasUpdate = true;
-            }
-        }
-
-        [SerializeField] private float finalValue;
-        private float lastFinalValue;
-
-        public float FinalValue
+        [ShowInInspector]
+        public float FinalValueF
         {
             get
             {
-                UpdateFinalValue();
-                return finalValue;
+                Update();
+                return finalValue.ToFloat();
             }
         }
 
-        public FloatNumeric(float basicValue)
-        {
-            this.basicValue = basicValue;
-            finalValue = basicValue;
-            lastFinalValue = basicValue;
-        }
+        private int  lastValue;
+        private bool hasUpdate = true;
 
-        public FloatNumeric()
-        {
-        }
+        [ShowInInspector] private readonly IList<NumericModifier>       modifiers          = new List<NumericModifier>();
+        [ShowInInspector] private readonly IList<CustomNumericModifier> constraintModifier = new List<CustomNumericModifier>();
 
-        public static implicit operator FloatNumeric(float value)
-        {
-            return new FloatNumeric(value);
-        }
+        public int GetOriginValue() => originalValue;
 
-        public static FloatNumeric operator +(FloatNumeric numeric, FloatNumericModifier modifier)
-        {
-            numeric.AddModifier(modifier);
-            return numeric;
-        }
+        public int GetAddModfierValue()
+            => modifiers.Where(mod => mod is AdditionNumericModifier)
+                        .Sum(mod => mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue);
 
-        public static FloatNumeric operator +(FloatNumeric numeric, float value)
-        {
-            numeric.AddModifier(new FloatNumericModifier(value));
-            return numeric;
-        }
+        public int GetAddModfierValueByTag(string[] tags)
+            => modifiers.Where(mod => mod is AdditionNumericModifier)
+                        .Where(mod => mod.Info.Tags.Intersect(tags).Any())
+                        .Sum(mod => mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue);
 
-        public static FloatNumeric operator +(FloatNumeric numeric, (float, string) value)
+        public Numeric AddModifier(NumericModifier modifier)
         {
-            numeric.AddModifier(new FloatNumericModifier(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        public static FloatNumeric operator +(FloatNumeric numeric, (float, string, string) value)
-        {
-            numeric.AddModifier(new FloatNumericModifier(value.Item1, value.Item2, value.Item3));
-            return numeric;
-        }
-
-        public static FloatNumeric operator -(FloatNumeric numeric, FloatNumericModifier modifier)
-        {
-            numeric.RemoveModifier(modifier);
-            return numeric;
-        }
-
-        public static FloatNumeric operator -(FloatNumeric numeric, float value)
-        {
-            numeric.RemoveModifier(new FloatNumericModifier(value));
-            return numeric;
-        }
-
-        public static FloatNumeric operator -(FloatNumeric numeric, (float, string) value)
-        {
-            numeric.RemoveModifier(new FloatNumericModifier(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        public static FloatNumeric operator -(FloatNumeric numeric, (float, string, string) value)
-        {
-            numeric.RemoveModifier(new FloatNumericModifier(value.Item1, value.Item2, value.Item3));
-            return numeric;
-        }
-
-        public static FloatNumeric operator *(FloatNumeric numeric, FractionNumericModifier modifier)
-        {
-            numeric.AddModifier(modifier);
-            return numeric;
-        }
-
-        public static FloatNumeric operator *(FloatNumeric numeric, (int, int) value)
-        {
-            numeric.AddModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        public static FloatNumeric operator /(FloatNumeric numeric, FractionNumericModifier modifier)
-        {
-            numeric.RemoveModifier(modifier);
-            return numeric;
-        }
-
-        public static FloatNumeric operator /(FloatNumeric numeric, (int, int) value)
-        {
-            numeric.RemoveModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        protected override void UpdateFinalValue()
-        {
-            if (!HasUpdate)
+            if (modifier is CustomNumericModifier customModifier)
             {
-                finalValue = lastFinalValue;
+                constraintModifier.Add(customModifier);
+            }
+            else
+            {
+                var existModifier = modifiers.FirstOrDefault(mod => mod.Info.Name == modifier.Info.Name);
+                if (existModifier != null) existModifier.Info.Count += modifier.Info.Count;
+                else modifiers.Add(modifier);
+            }
+
+            hasUpdate = true;
+            return this;
+        }
+
+        public Numeric RemoveModifier(NumericModifier modifier)
+        {
+            if (modifier is CustomNumericModifier customModifier)
+            {
+                constraintModifier.Remove(customModifier);
+            }
+            else
+            {
+                var existModifier = modifiers.FirstOrDefault(mod => mod.Info.Name == modifier.Info.Name);
+                if (existModifier != null)
+                {
+                    existModifier.Info.Count -= modifier.Info.Count;
+                    if (existModifier.Info.Count <= 0) modifiers.Remove(existModifier);
+                }
+            }
+
+            hasUpdate = true;
+            return this;
+        }
+
+        public Numeric Clear()
+        {
+            modifiers.Clear();
+            return this;
+        }
+
+        private void Update()
+        {
+            if (!hasUpdate)
+            {
+                finalValue = lastValue;
                 return;
             }
 
-            finalValue = basicValue;
-            foreach (var modifier in ModifierCollector)
-            {
-                modifier.ApplyModifier(ref finalValue, basicValue, this);
-            }
+            finalValue = originalValue;
+            foreach (var modifier in modifiers) finalValue = modifier.Apply(finalValue)(this);
 
-            lastFinalValue = finalValue;
-            HasUpdate = false;
+            foreach (var customNumericModifier in constraintModifier) finalValue = customNumericModifier.Apply(finalValue)(this);
+
+
+            lastValue = finalValue;
+            hasUpdate = false;
         }
-    }
 
-    [Serializable]
-    public class GenericNumeric<T> : Numeric where T : CustomDataStructure, new()
-    {
-        [SerializeField] private T basicValue;
-
-        public T BasicValue
+        public Numeric(int value)
         {
-            get => basicValue;
-            set
-            {
-                basicValue = value;
-                HasUpdate = true;
-            }
+            originalValue = value;
+            lastValue     = value;
         }
 
-        [SerializeField] private T finalValue;
-        private T lastFinalValue;
-
-        public T FinalValue
+        public Numeric(float value)
         {
-            get
-            {
-                UpdateFinalValue();
-                return finalValue;
-            }
+            originalValue = value.ToFixedPoint();
+            lastValue     = originalValue;
         }
 
-        public GenericNumeric(T basicValue)
-        {
-            this.basicValue = basicValue;
-            finalValue = basicValue;
-            lastFinalValue = basicValue;
-        }
+        public static implicit operator Numeric(int   value)   { return new Numeric(value); }
+        public static implicit operator Numeric(float value)   { return new Numeric(value); }
+        public static implicit operator int(Numeric   numeric) { return numeric.FinalValue; }
+        public static implicit operator float(Numeric numeric) { return numeric.FinalValueF; }
 
-        public GenericNumeric()
-        {
-        }
+        public static Numeric operator +(Numeric numeric, AdditionNumericModifier modifier) => numeric.AddModifier(modifier);
 
-        public static implicit operator GenericNumeric<T>(T value)
-        {
-            return new GenericNumeric<T>(value);
-        }
+        public static Numeric operator -(Numeric numeric, AdditionNumericModifier modifier) => numeric.RemoveModifier(modifier);
 
-        public static GenericNumeric<T> operator +(GenericNumeric<T> numeric, GenericNumericModifier<T> modifier)
-        {
-            numeric.AddModifier(modifier);
-            return numeric;
-        }
+        public static Numeric operator *(Numeric numeric, FractionNumericModifier modifier) => numeric.AddModifier(modifier);
 
-        public static GenericNumeric<T> operator +(GenericNumeric<T> numeric, T value)
-        {
-            numeric.AddModifier(new GenericNumericModifier<T>(value));
-            return numeric;
-        }
+        public static Numeric operator /(Numeric numeric, FractionNumericModifier modifier) => numeric.RemoveModifier(modifier);
 
-        public static GenericNumeric<T> operator +(GenericNumeric<T> numeric, (T, string) value)
-        {
-            numeric.AddModifier(new GenericNumericModifier<T>(value.Item1, value.Item2));
-            return numeric;
-        }
+        public static Numeric operator +(Numeric numeric, CustomNumericModifier modifier) => numeric.AddModifier(modifier);
 
-        public static GenericNumeric<T> operator +(GenericNumeric<T> numeric, (T, string, string[]) value)
-        {
-            numeric.AddModifier(new GenericNumericModifier<T>(value.Item1, value.Item2, value.Item3));
-            return numeric;
-        }
-
-        public static GenericNumeric<T> operator -(GenericNumeric<T> numeric, GenericNumericModifier<T> modifier)
-        {
-            numeric.RemoveModifier(modifier);
-            return numeric;
-        }
-
-        public static GenericNumeric<T> operator -(GenericNumeric<T> numeric, T value)
-        {
-            numeric.RemoveModifier(new GenericNumericModifier<T>(value));
-            return numeric;
-        }
-
-        public static GenericNumeric<T> operator -(GenericNumeric<T> numeric, (T, string) value)
-        {
-            numeric.RemoveModifier(new GenericNumericModifier<T>(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        public static GenericNumeric<T> operator -(GenericNumeric<T> numeric, (T, string, string[]) value)
-        {
-            numeric.RemoveModifier(new GenericNumericModifier<T>(value.Item1, value.Item2, value.Item3));
-            return numeric;
-        }
-
-        public static GenericNumeric<T> operator *(GenericNumeric<T> numeric, FractionNumericModifier modifier)
-        {
-            numeric.AddModifier(modifier);
-            return numeric;
-        }
-
-        public static GenericNumeric<T> operator *(GenericNumeric<T> numeric, (int, int) value)
-        {
-            numeric.AddModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        public static GenericNumeric<T> operator /(GenericNumeric<T> numeric, FractionNumericModifier modifier)
-        {
-            numeric.RemoveModifier(modifier);
-            return numeric;
-        }
-
-        public static GenericNumeric<T> operator /(GenericNumeric<T> numeric, (int, int) value)
-        {
-            numeric.RemoveModifier(new OverrideFractionNumericModifier(value.Item1, value.Item2));
-            return numeric;
-        }
-
-        protected override void UpdateFinalValue()
-        {
-            if (!HasUpdate)
-            {
-                finalValue = lastFinalValue;
-                return;
-            }
-
-            finalValue = basicValue;
-            foreach (var modifier in ModifierCollector)
-            {
-                (modifier as GenericNumericModifier<T>)?.ApplyModifier(ref finalValue);
-            }
-
-            lastFinalValue = finalValue;
-            HasUpdate = false;
-        }
+        public static Numeric operator -(Numeric numeric, CustomNumericModifier modifier) => numeric.RemoveModifier(modifier);
     }
 }

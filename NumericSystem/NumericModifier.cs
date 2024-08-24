@@ -1,464 +1,178 @@
 ﻿using System;
 using System.Linq;
-using Framework.NumericSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Framework.Utility.NumericSystem
+namespace WFramework.CoreGameDevKit.NumericSystem
 {
-    [Serializable]
-    public abstract class NumericModifier
+    [ShowInInspector]
+    public record NumericModifierInfo
     {
-        [LabelText("Tag")] public string[] tags = Array.Empty<string>();
-        public string name = "";
-        [LabelText("叠加数量")] public int count = 1;
+        public readonly string[] Tags;
+        public readonly string   Name;
 
-        public virtual void ApplyModifier(ref int input, int source, Numeric numeric)
+        public int Count;
+
+        public NumericModifierInfo(string[] tags, string name, int count)
         {
-        }
-
-        public virtual void ApplyModifier(ref float input, float source, Numeric numeric)
-        {
-        }
-
-        public abstract bool WeakEquals(NumericModifier other);
-    }
-
-    [Serializable]
-    public abstract class AdditionNumericModifier : NumericModifier
-    {
-    }
-
-    [Serializable]
-    public class GenericNumericModifier<T> : AdditionNumericModifier, IDescription where T : CustomDataStructure, new()
-    {
-        public readonly T Value;
-        [ShowInInspector] public string DescribeString => $"泛型修正器:{Value}";
-
-        public GenericNumericModifier(T value, string name = "", params string[] tags)
-        {
-            Value = value;
-            this.name = name;
-            this.tags = tags;
-        }
-
-        public GenericNumericModifier()
-        {
-        }
-
-        public static implicit operator GenericNumericModifier<T>(T value)
-        {
-            return new GenericNumericModifier<T>(value);
-        }
-
-        public void ApplyModifier(ref T input)
-        {
-            var a = input as CustomDataStructure;
-            var b = Value as CustomDataStructure;
-            var result = a;
-            for (int i = 0; i < count - 1; i++)
-                result += b;
-            input = (T)result;
-        }
-
-        public override bool WeakEquals(NumericModifier other)
-        {
-            return other is GenericNumericModifier<T> genericNumericModifier &&
-                   Value.Equals(genericNumericModifier.Value) && name == genericNumericModifier.name;
+            Tags  = tags;
+            Name  = name;
+            Count = count;
         }
     }
 
-    [Serializable]
-    public class IntNumericModifier : AdditionNumericModifier, IDescription
+    [ShowInInspector]
+    public class NumericModifier
     {
-        public int value;
-        [ShowInInspector] public string DescribeString => $"整型修正器:{value}";
+        public const string TagSelf      = "SELF";
+        public const string DefaultName  = "DEFAULT MODIFIER";
+        public const int    DefaultCount = 1;
 
-        public IntNumericModifier()
-        {
-        }
+        private static readonly NumericModifierInfo DefaultInfo = new(Array.Empty<string>(), DefaultName, DefaultCount);
 
-        public IntNumericModifier(int value)
-        {
-            this.value = value;
-            name = "";
-            tags = Array.Empty<string>();
-        }
+        private readonly NumericModifierInfo info;
 
-        public IntNumericModifier(int value, string name)
-        {
-            this.value = value;
-            this.name = name;
-            tags = Array.Empty<string>();
-        }
+        public NumericModifierInfo Info => info ?? DefaultInfo;
 
-        public IntNumericModifier(int value, string name = "", params string[] inputTags)
-        {
-            this.value = value;
-            this.name = name;
-            tags = inputTags;
-        }
+        public virtual Func<Numeric, int> Apply(int source) { return _ => source; }
 
-        public static implicit operator IntNumericModifier(int value)
-        {
-            return new IntNumericModifier(value);
-        }
+        #region 构造函数
 
-        public static implicit operator IntNumericModifier((int, string) value)
-        {
-            return new IntNumericModifier(value.Item1, value.Item2);
-        }
+        protected NumericModifier() { info = DefaultInfo; }
 
-        public static implicit operator IntNumericModifier((int, string, string) value)
-        {
-            return new IntNumericModifier(value.Item1, value.Item2, value.Item3);
-        }
+        protected NumericModifier(NumericModifierInfo newInfo) { info = newInfo; }
 
-        public override void ApplyModifier(ref int input, int source, Numeric numeric)
-        {
-            input += value * count;
-        }
-
-        public override bool WeakEquals(NumericModifier other)
-        {
-            return other is IntNumericModifier intNumericModifier && value == intNumericModifier.value &&
-                   name == intNumericModifier.name;
-        }
+        #endregion
     }
 
-    [Serializable]
-    public class FloatNumericModifier : AdditionNumericModifier, IDescription
+    [ShowInInspector]
+    public sealed class AdditionNumericModifier : NumericModifier
     {
-        public readonly float Value;
-        [ShowInInspector] public string DescribeString => $"浮点修正器:{Value}";
+        public readonly int StoreValue;
 
-        public FloatNumericModifier(float value, string name = "", params string[] tags)
+        public override Func<Numeric, int> Apply(int source) { return _ => source + StoreValue * Info.Count; }
+
+        #region 构造函数和隐式转换
+
+        public AdditionNumericModifier(int   value) { StoreValue = value; }
+        public AdditionNumericModifier(float value) { StoreValue = value.ToFixedPoint(); }
+
+        public AdditionNumericModifier(int value, string[] tags, string name, int count = 1) : base(new NumericModifierInfo(tags, name, count))
         {
-            Value = value;
-            this.name = name;
-            this.tags = tags;
+            StoreValue = value;
         }
 
-        public FloatNumericModifier()
+        public AdditionNumericModifier(float value, string[] tags, string name, int count = 1) : base(new NumericModifierInfo(tags, name, count))
         {
+            StoreValue = value.ToFixedPoint();
         }
 
-        public static implicit operator FloatNumericModifier(float value)
-        {
-            return new FloatNumericModifier(value);
-        }
+        public static implicit operator AdditionNumericModifier(int value) => new(value);
 
-        public override void ApplyModifier(ref float input, float source, Numeric numeric)
-        {
-            input += Value * count;
-        }
+        public static implicit operator AdditionNumericModifier(float value) => new(value);
 
-        public override bool WeakEquals(NumericModifier other)
-        {
-            return other is FloatNumericModifier floatNumericModifier && Value.Equals(floatNumericModifier.Value) &&
-                   name == floatNumericModifier.name;
-        }
+        public static implicit operator AdditionNumericModifier((int value, string[] tags, string name, int count) tuple)
+            => new(tuple.value, tuple.tags, tuple.name, tuple.count);
+
+        public static implicit operator AdditionNumericModifier((float value, string[] tags, string name, int count) tuple)
+            => new(tuple.value, tuple.tags, tuple.name, tuple.count);
+
+        #endregion
     }
 
-    [Serializable]
-    public class FixedNumericModifier : AdditionNumericModifier, IDescription
+    [ShowInInspector]
+    public sealed class FractionNumericModifier : NumericModifier
     {
-        private readonly float value;
-        private const uint Factor = 10000;
-        private int FixedValue => (int)(value * Factor);
-        [ShowInInspector] public string DescribeString => $"定点修正器:{FixedValue / (float)Factor}";
-
-        public FixedNumericModifier(float value, string name = "", params string[] tags)
+        public enum FractionType
         {
-            this.value = value;
-            this.name = name;
-            this.tags = tags;
+            Override, // 覆盖
+            Increase, // 增量
         }
 
-        public FixedNumericModifier()
+        [ShowInInspector] private readonly int numerator;   // 分子
+        [ShowInInspector] private readonly int denominator; // 分母
+
+        private readonly FractionType type;
+
+        #region 构造函数和隐式转换
+
+        public FractionNumericModifier(int numerator, int denominator, FractionType type)
         {
+            this.numerator   = numerator;
+            this.denominator = denominator;
+            this.type        = type;
         }
 
-        public static implicit operator FixedNumericModifier(float value)
+        public FractionNumericModifier(int precent, FractionType type) : this(precent, 100, type) { }
+
+        public FractionNumericModifier(
+            int          numerator,
+            int          denominator,
+            FractionType type,
+            string[]     tags,
+            string       name,
+            int          count = 1) : base(new NumericModifierInfo(tags, name, count))
         {
-            return new FixedNumericModifier(value);
+            this.numerator   = numerator;
+            this.denominator = denominator;
+            this.type        = type;
         }
 
-        public override void ApplyModifier(ref float input, float source, Numeric numeric)
-        {
-            var fixedInput = (int)(input * Factor);
-            fixedInput += FixedValue * count;
-            input = fixedInput / (float)Factor;
-        }
-
-        public override bool WeakEquals(NumericModifier other)
-        {
-            return other is FixedNumericModifier fixedNumericModifier &&
-                   FixedValue == fixedNumericModifier.FixedValue && name == fixedNumericModifier.name;
-        }
-    }
-
-    #region 乘法修正器
-
-    [Serializable]
-    public abstract class FractionNumericModifier : NumericModifier
-    {
-        protected readonly int Denominator;
-        protected readonly int Numerator;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="numerator">分子</param>
-        /// <param name="denominator">分母</param>
-        /// <param name="name"></param>
-        /// <param name="tags"></param>
-        protected FractionNumericModifier(int numerator, int denominator, string name = "", params string[] tags)
-        {
-            Numerator = numerator;
-            Denominator = denominator;
-            this.name = name;
-            this.tags = tags;
-        }
-
-        protected FractionNumericModifier()
-        {
-        }
-    }
-
-    [Serializable]
-    public class OverrideFractionNumericModifier : FractionNumericModifier, IDescription
-    {
-        public string DescribeString => $"覆盖分数修正器:{Numerator}/{Denominator}";
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="numerator">分子</param>
-        /// <param name="denominator">分母</param>
-        /// <param name="name"></param>
-        /// <param name="tag"></param>
-        public OverrideFractionNumericModifier(int numerator, int denominator, string name = "", params string[] tag) :
-            base(numerator,
-                denominator, name, tag)
+        public FractionNumericModifier(int precent, FractionType type, string[] tags, string name, int count = 1) : this
+            (precent, 100, type, tags, name, count)
         {
         }
 
-        public static implicit operator OverrideFractionNumericModifier(
-            (int numerator, int denominator) value)
-        {
-            return new OverrideFractionNumericModifier(value.numerator, value.denominator);
-        }
+        public static implicit operator FractionNumericModifier((int numerator, int denominator, FractionType type) tuple)
+            => new(tuple.numerator, tuple.denominator, tuple.type);
 
-        public static implicit operator OverrideFractionNumericModifier(
-            (int numerator, int denominator, string name) value)
-        {
-            return new OverrideFractionNumericModifier(value.numerator, value.denominator, value.name);
-        }
+        public static implicit operator FractionNumericModifier(
+            (int numerator, int denominator, FractionType type, string[] tags, string name, int count) tuple)
+            => new(tuple.numerator, tuple.denominator, tuple.type, tuple.tags, tuple.name, tuple.count);
 
-        public static implicit operator OverrideFractionNumericModifier(
-            (int numerator, int denominator, string name, string[] tag) value)
-        {
-            return new OverrideFractionNumericModifier(value.numerator, value.denominator, value.name, value.tag);
-        }
+        public static implicit operator FractionNumericModifier((int precent, FractionType type) tuple)
+            => new(tuple.precent, tuple.type);
 
-        public override void ApplyModifier(ref float input, float source, Numeric numeric)
+        public static implicit operator FractionNumericModifier((int precent, FractionType type, string[] tags, string name, int count) tuple)
+            => new(tuple.precent, tuple.type, tuple.tags, tuple.name, tuple.count);
+
+        #endregion
+
+        public override Func<Numeric, int> Apply(int source) => numeric =>
         {
-            var result = 0f;
-            var factor = Numerator / (float)Denominator - 1;
-            if (tags.Length > 0) //如果有标签
+            var targetAddModfierValue   = numeric.GetAddModfierValueByTag(Info.Tags);
+            var noTargetAddModiferValue = numeric.GetAddModfierValue() - targetAddModfierValue;
+            return type switch
             {
-                foreach (var modifier in numeric.ModifierCollector) //遍历所有的修正器
-                {
-                    if (modifier is not FloatNumericModifier floatNumericModifier) continue; //如果不是浮点修正器,跳过
-                    var exist = false;
-                    if (floatNumericModifier.tags.Length > 0)
-                    {
-                        if (floatNumericModifier.tags.Any(tag => tags.Contains(tag))) //如果有相同的标签
-                        {
-                            exist = true;
-                        }
-                    }
+                FractionType.Increase => GetIncrease(targetAddModfierValue + GetOrigin(numeric)) + noTargetAddModiferValue,
+                FractionType.Override => GetOverride(targetAddModfierValue + GetOrigin(numeric)) + noTargetAddModiferValue,
+                _                     => throw new ArgumentOutOfRangeException()
+            };
+        };
 
-                    if (exist)
-                    {
-                        result += floatNumericModifier.Value * floatNumericModifier.count * factor; //计算结果
-                    }
-                }
-            }
-
-            if (tags.Contains("self")) result += source * factor;
-
-            var absResult = Mathf.Abs(result);
-            var originalResult = Mathf.Abs(result);
-            int isNegative = result < 0 ? -1 : 1;
-
-            for (int i = 0; i < count - 1; i++)
-            {
-                absResult += originalResult * Mathf.Abs(Mathf.Pow(factor, i + 1));
-            }
-
-            input += absResult * isNegative;
-        }
-
-        public override void ApplyModifier(ref int input, int source, Numeric numeric)
-        {
-            var result = 0f;
-            var factor = Numerator / (float)Denominator - 1;
-
-            if (tags.Length > 0)
-            {
-                foreach (var modifier in numeric.ModifierCollector)
-                {
-                    if (modifier is not IntNumericModifier intNumericModifier) continue;
-                    var exist = false;
-                    if (intNumericModifier.tags.Length > 0)
-                    {
-                        if (intNumericModifier.tags.Any(tag => tags.Contains(tag)))
-                        {
-                            exist = true;
-                        }
-                    }
-
-                    if (exist)
-                    {
-                        result += intNumericModifier.value * intNumericModifier.count * factor;
-                    }
-                }
-            }
-
-            if (tags.Contains("self")) result += source * factor;
-
-            var absResult = Mathf.Abs(result);
-            var originalResult = Mathf.Abs(result);
-            int isNegative = result < 0 ? -1 : 1;
-
-            for (int i = 0; i < count - 1; i++)
-            {
-                absResult += originalResult * Mathf.Abs(Mathf.Pow(factor, i + 1));
-            }
-
-            input += (int)(absResult * isNegative);
-        }
-
-        public override bool WeakEquals(NumericModifier other)
-        {
-            return other is OverrideFractionNumericModifier overrideFractionNumericModifier &&
-                   Numerator == overrideFractionNumericModifier.Numerator &&
-                   Denominator == overrideFractionNumericModifier.Denominator &&
-                   name == overrideFractionNumericModifier.name;
-        }
+        int GetOrigin(Numeric numeric) => Info.Tags.Contains(TagSelf) ? numeric.GetOriginValue() : 0;
+        int GetIncrease(int   value)   => (int)(value * (1 + numerator * Info.Count / (float)denominator));
+        int GetOverride(int   value)   => (int)(value * Mathf.Pow(numerator / (float)denominator, p: Info.Count));
     }
 
-    [Serializable]
-    public class IncreaseFractionNumericModifier : FractionNumericModifier, IDescription
+    [ShowInInspector]
+    public sealed class CustomNumericModifier : NumericModifier
     {
-        public string DescribeString => $"增量分数修正器:{Numerator}/{Denominator}";
+        private readonly Func<int, int>     intFunc;
+        private readonly Func<float, float> floatFunc;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="numerator">分子</param>
-        /// <param name="denominator">分母</param>
-        /// <param name="name"></param>
-        /// <param name="tag"></param>
-        public IncreaseFractionNumericModifier(int numerator, int denominator, string name = "", params string[] tag) :
-            base(numerator,
-                denominator, name, tag)
+
+        public CustomNumericModifier(Func<int, int>     intFunc) { this.intFunc     = intFunc; }
+        public CustomNumericModifier(Func<float, float> floatFunc) { this.floatFunc = floatFunc; }
+
+        public static implicit operator CustomNumericModifier(Func<int, int>     intFunc)   => new(intFunc);
+        public static implicit operator CustomNumericModifier(Func<float, float> floatFunc) => new(floatFunc);
+
+        public override Func<Numeric, int> Apply(int source)
         {
-        }
-
-        public static implicit operator IncreaseFractionNumericModifier((int numerator, int denominator) value)
-        {
-            return new IncreaseFractionNumericModifier(value.numerator, value.denominator);
-        }
-
-        public static implicit operator IncreaseFractionNumericModifier(
-            (int numerator, int denominator, string name) value)
-        {
-            return new IncreaseFractionNumericModifier(value.numerator, value.denominator, value.name);
-        }
-
-        public static implicit operator IncreaseFractionNumericModifier(
-            (int numerator, int denominator, string name, string[] tag) value)
-        {
-            return new IncreaseFractionNumericModifier(value.numerator, value.denominator, value.name, value.tag);
-        }
-
-        public override void ApplyModifier(ref float input, float source, Numeric numeric)
-        {
-            var result = 0f;
-            var factor = Numerator / (float)Denominator;
-
-            if (tags.Length > 0)
-            {
-                foreach (var modifier in numeric.ModifierCollector)
-                {
-                    if (modifier is not FloatNumericModifier floatNumericModifier) continue;
-                    var exist = false;
-                    if (floatNumericModifier.tags.Length > 0)
-                    {
-                        if (floatNumericModifier.tags.Any(tag => tags.Contains(tag)))
-                        {
-                            exist = true;
-                        }
-                    }
-
-                    if (exist)
-                    {
-                        result += floatNumericModifier.Value * floatNumericModifier.count * factor;
-                    }
-                }
-            }
-
-            if (tags.Contains("self")) result += source * factor;
-
-            result *= count;
-
-            input += result;
-        }
-
-        public override void ApplyModifier(ref int input, int source, Numeric numeric)
-        {
-            var result = 0;
-            var factor = Numerator / (float)Denominator;
-
-            if (tags.Length > 0)
-            {
-                foreach (var modifier in numeric.ModifierCollector)
-                {
-                    if (modifier is not IntNumericModifier intNumericModifier) continue;
-                    var exist = false;
-                    if (intNumericModifier.tags.Length > 0)
-                    {
-                        if (intNumericModifier.tags.Any(tag => tags.Contains(tag)))
-                        {
-                            exist = true;
-                        }
-                    }
-
-                    if (exist)
-                    {
-                        result += (int)(intNumericModifier.value * intNumericModifier.count * factor);
-                    }
-                }
-            }
-
-            if (tags.Contains("self")) result += (int)(source * factor);
-
-            result *= count;
-
-            input += result;
-        }
-
-        public override bool WeakEquals(NumericModifier other)
-        {
-            return other is IncreaseFractionNumericModifier increaseFractionNumericModifier &&
-                   Numerator == increaseFractionNumericModifier.Numerator &&
-                   Denominator == increaseFractionNumericModifier.Denominator &&
-                   name == increaseFractionNumericModifier.name;
+            return _ => intFunc?.Invoke(source)
+                     ?? floatFunc.Invoke(source.ToFloat())
+                                 .ToFixedPoint();
         }
     }
-
-    #endregion
 }
