@@ -1,0 +1,10 @@
+H:\Program\NumericSystem\src\NumericSystem\NumericSystem\bin\Debug\netstandard2.1\NumericSystem.deps.json
+H:\Program\NumericSystem\src\NumericSystem\NumericSystem\bin\Debug\netstandard2.1\NumericSystem.dll
+H:\Program\NumericSystem\src\NumericSystem\NumericSystem\bin\Debug\netstandard2.1\NumericSystem.pdb
+H:\Program\NumericSystem\src\NumericSystem\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.GeneratedMSBuildEditorConfig.editorconfig
+H:\Program\NumericSystem\src\NumericSystem\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.AssemblyInfoInputs.cache
+H:\Program\NumericSystem\src\NumericSystem\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.AssemblyInfo.cs
+H:\Program\NumericSystem\src\NumericSystem\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.csproj.CoreCompileInputs.cache
+H:\Program\NumericSystem\src\NumericSystem\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.sourcelink.json
+H:\Program\NumericSystem\src\NumericSystem\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.dll
+H:\Program\NumericSystem\src\NumericSystem\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.pdb
