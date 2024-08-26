@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem\\NumericSystem.csproj": {}
+    "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem.csproj": {}
   },
   "projects": {
-    "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem\\NumericSystem.csproj": {
+    "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem\\NumericSystem.csproj",
+        "projectUniqueName": "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem.csproj",
         "projectName": "NumericSystem",
-        "projectPath": "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem\\NumericSystem.csproj",
+        "projectPath": "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem.csproj",
         "packagesPath": "C:\\Users\\車部拟幻\\.nuget\\packages\\",
-        "outputPath": "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem\\obj\\",
+        "outputPath": "H:\\Program\\NumericSystem\\src\\NumericSystem\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "H:\\qxyustudy\\VS2022\\sdk\\NuGetPackages"

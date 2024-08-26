@@ -1,3 +1,0 @@
-H:\Program\NumericSystem\src\NumericSystem\NumericSystem\bin\Release\netstandard2.1\publish\NumericSystem.dll
-H:\Program\NumericSystem\src\NumericSystem\NumericSystem\bin\Release\netstandard2.1\publish\NumericSystem.deps.json
-H:\Program\NumericSystem\src\NumericSystem\NumericSystem\bin\Release\netstandard2.1\publish\NumericSystem.pdb
