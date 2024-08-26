@@ -178,8 +178,8 @@ An increment modifier will add a new value to the original, while a replace modi
 
 The formulas are as follows:
 
-$$ Increase = (1 + (\frac{numerator}{denominator})) \times Input $$
-$$ Override = (\frac{numerator}{denominator}) \times Input$$
+$ Increase = (1 + (\frac{numerator}{denominator})) \times Input $
+$ Override = (\frac{numerator}{denominator}) \times Input$
 
 ### Modifiers' Name, Tags, and Count
 
@@ -202,9 +202,9 @@ Numeric health = 100;
 
 health += (20, new[] { "Equipment" }, "Armor", 1);
 Debug.Log(health.FinalValue); // 120
-health *= (120, FractionNumericModifier.FractionType.Override, new[] { "Equipment" }, "Armor Upgrade", 1);
+health *= (120, FractionType.Override, new[] { "Equipment" }, "Armor Upgrade", 1);
 Debug.Log(health.FinalValue); // 124
-health *= (50, FractionNumericModifier.FractionType.Increase, new[] { NumericModifier.TagSelf }, "Upgrade", 1);
+health *= (50, FractionType.Increase, new[] { NumericModifierConfig.TagSelf }, "Upgrade", 1);
 Debug.Log(health.FinalValue); // 174
 ```
 

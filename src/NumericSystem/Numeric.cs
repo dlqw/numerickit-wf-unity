@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Sirenix.OdinInspector;
 
 namespace WFramework.CoreGameDevKit.NumericSystem
 {
     [Serializable]
-
+    [ShowInInspector]
     public class Numeric
     {
-        private readonly int originalValue;
+        [ShowInInspector] private readonly int originalValue;
 
         private int finalValue;
 
-
+        [ShowInInspector]
         public int FinalValue
         {
             get
@@ -22,7 +23,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             }
         }
 
-
+        [ShowInInspector]
         public float FinalValueF
         {
             get
@@ -32,24 +33,24 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             }
         }
 
-        private int lastValue;
+        private int  lastValue;
         private bool hasUpdate = true;
 
-        private readonly IList<NumericModifier> modifiers = new List<NumericModifier>();
-        private readonly IList<CustomNumericModifier> constraintModifier = new List<CustomNumericModifier>();
+        [ShowInInspector] private readonly HashSet<INumericModifier>      modifiers          = new HashSet<INumericModifier>();
+        [ShowInInspector] private readonly HashSet<CustomNumericModifier> constraintModifier = new HashSet<CustomNumericModifier>();
 
         public int GetOriginValue() => originalValue;
 
         public int GetAddModfierValue()
-            => modifiers.Where(mod => mod is AdditionNumericModifier)
+            => modifiers.Where(mod => mod.Type == ModifierType.Add)
                         .Sum(mod => mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue);
 
         public int GetAddModfierValueByTag(string[] tags)
-            => modifiers.Where(mod => mod is AdditionNumericModifier)
+            => modifiers.Where(mod => mod.Type == ModifierType.Add)
                         .Where(mod => mod.Info.Tags.Intersect(tags).Any())
                         .Sum(mod => mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue);
 
-        public Numeric AddModifier(NumericModifier modifier)
+        public Numeric AddModifier(INumericModifier modifier)
         {
             if (modifier is CustomNumericModifier customModifier)
             {
@@ -66,7 +67,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             return this;
         }
 
-        public Numeric RemoveModifier(NumericModifier modifier)
+        public Numeric RemoveModifier(INumericModifier modifier)
         {
             if (modifier is CustomNumericModifier customModifier)
             {
@@ -113,18 +114,18 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         public Numeric(int value)
         {
             originalValue = value;
-            lastValue = value;
+            lastValue     = value;
         }
 
         public Numeric(float value)
         {
             originalValue = value.ToFixedPoint();
-            lastValue = originalValue;
+            lastValue     = originalValue;
         }
 
-        public static implicit operator Numeric(int value) { return new Numeric(value); }
-        public static implicit operator Numeric(float value) { return new Numeric(value); }
-        public static implicit operator int(Numeric numeric) { return numeric.FinalValue; }
+        public static implicit operator Numeric(int   value)   { return new Numeric(value); }
+        public static implicit operator Numeric(float value)   { return new Numeric(value); }
+        public static implicit operator int(Numeric   numeric) { return numeric.FinalValue; }
         public static implicit operator float(Numeric numeric) { return numeric.FinalValueF; }
 
         public static Numeric operator +(Numeric numeric, AdditionNumericModifier modifier) => numeric.AddModifier(modifier);

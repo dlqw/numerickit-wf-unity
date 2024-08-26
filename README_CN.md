@@ -165,8 +165,8 @@ public enum FractionType
 
 公式如下:
 
-$$ Increase = (1 + (\frac{numerator}{denominator})) \times Input $$
-$$ Override = (\frac{numerator}{denominator}) \times Input$$
+$ Increase = (1 + (\frac{numerator}{denominator})) \times Input $
+$ Override = (\frac{numerator}{denominator}) \times Input $
 
 在乘法段最开头的程序演示中，我还使用了一个 `(Int,FractionType)` 的元组。其中 Int 代表的是百分比(Precent)。即为 $Precent = \frac{numerator}{100}$
 
@@ -193,9 +193,9 @@ Numeric health = 100;
 
 health += (20, new[] { "装备" }, "明光铠", 1);
 Debug.Log(health.FinalValue); // 120
-health *= (120, FractionNumericModifier.FractionType.Override, new[] { "装备" }, "明光铠升级", 1);
+health *= (120, FractionType.Override, new[] { "装备" }, "明光铠升级", 1);
 Debug.Log(health.FinalValue); // 124
-health *= (50, FractionNumericModifier.FractionType.Increase, new[] { NumericModifier.TagSelf }, "升级", 1);
+health *= (50, FractionType.Increase, new[] { NumericModifierConfig.TagSelf }, "升级", 1);
 Debug.Log(health.FinalValue); // 174
 ```
 

@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/dlqw/NumericSystem.git"
+    "url": "https://github.com/dlqw/NumericSystem.git"
   },
   "author": "rdququ",
   "license": "MIT",
