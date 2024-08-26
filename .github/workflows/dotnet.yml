@@ -2,28 +2,28 @@ name: .NET
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '9.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore src/NumericSystem.sln # 使用 .sln 文件进行还原
 
-    - name: Build project
-      run: dotnet build --no-restore --configuration Release
+      - name: Build project
+        run: dotnet build src/NumericSystem.sln --no-restore --configuration Release # 使用 .sln 文件构建
 
-    - name: Run tests
-      run: dotnet test --no-build --verbosity normal --configuration Release
+      - name: Run tests
+        run: dotnet test src/NumericSystem.sln --no-build --verbosity normal --configuration Release # 使用 .sln 文件运行测试
