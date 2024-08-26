@@ -1,11 +1,11 @@
-<h1 style="text-align:center">
+<h1 align="center">
   Numeric System
 </h1>
-<p style="text-align:center">
+<p align="center">
   HuaYe Studio rdququ
 </p>
 
-<p style="text-align:center">
+<p align="center">
 <img alt="Static Badge" src="https://img.shields.io/badge/field-gameplay-red">
 <img src="https://img.shields.io/badge/script-csharp-yellow">
 <img src="https://img.shields.io/badge/dotnet-Standard 2.1-green">
