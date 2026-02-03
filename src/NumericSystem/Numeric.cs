@@ -29,11 +29,11 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             }
         }
 
-        private int  lastValue;
+        private int lastValue;
         private bool hasUpdate = true;
 
-        private readonly HashSet<INumericModifier>      modifiers          = new HashSet<INumericModifier>();
-         private readonly HashSet<CustomNumericModifier> constraintModifier = new HashSet<CustomNumericModifier>();
+        private readonly HashSet<INumericModifier> modifiers = new HashSet<INumericModifier>();
+        private readonly HashSet<CustomNumericModifier> constraintModifier = new HashSet<CustomNumericModifier>();
 
         public int GetOriginValue() => originalValue;
 

@@ -17,7 +17,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         public FractionNumericModifier(int numerator, int denominator, FractionType type)
         {
             if (denominator == 0)
-                throw new ArgumentException("Denominator cannot be zero.", nameof(denominator));
+                throw new ArgumentException("分母不能为零。", nameof(denominator));
 
             this.numerator   = numerator;
             this.denominator = denominator;
@@ -25,7 +25,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             Info             = NumericModifierConfig.DefaultInfo;
         }
 
-        public FractionNumericModifier(int precent, FractionType type) : this(precent, 100, type) { }
+        public FractionNumericModifier(int percent, FractionType type) : this(percent, 100, type) { }
 
         public FractionNumericModifier(
             int          numerator,
@@ -36,7 +36,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             int          count = 1)
         {
             if (denominator == 0)
-                throw new ArgumentException("Denominator cannot be zero.", nameof(denominator));
+                throw new ArgumentException("分母不能为零。", nameof(denominator));
 
             this.numerator   = numerator;
             this.denominator = denominator;
@@ -44,8 +44,8 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             Info             = new NumericModifierInfo(tags, name, count);
         }
 
-        public FractionNumericModifier(int precent, FractionType type, string[] tags, string name, int count = 1) : this
-            (precent, 100, type, tags, name, count)
+        public FractionNumericModifier(int percent, FractionType type, string[] tags, string name, int count = 1) : this
+            (percent, 100, type, tags, name, count)
         {
         }
 
@@ -56,16 +56,22 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             (int numerator, int denominator, FractionType type, string[] tags, string name, int count) tuple)
             => new(tuple.numerator, tuple.denominator, tuple.type, tuple.tags, tuple.name, tuple.count);
 
-        public static implicit operator FractionNumericModifier((int precent, FractionType type) tuple)
-            => new(tuple.precent, tuple.type);
+        public static implicit operator FractionNumericModifier((int percent, FractionType type) tuple)
+            => new(tuple.percent, tuple.type);
 
-        public static implicit operator FractionNumericModifier((int precent, FractionType type, string[] tags, string name, int count) tuple)
-            => new(tuple.precent, tuple.type, tuple.tags, tuple.name, tuple.count);
+        public static implicit operator FractionNumericModifier((int percent, FractionType type, string[] tags, string name, int count) tuple)
+            => new(tuple.percent, tuple.type, tuple.tags, tuple.name, tuple.count);
 
         #endregion
 
         public Func<Numeric, int> Apply(int source) => numeric =>
         {
+            if (numeric == null)
+                throw new ArgumentNullException(nameof(numeric), "Numeric 对象不能为 null。");
+
+            if (Info.Tags == null)
+                throw new InvalidOperationException("修饰符的 Tags 属性不能为 null。");
+
             // FRACTION MODIFIER APPLICATION FIX
             //
             // Problem: Original implementation caused incorrect results when multiple fraction
@@ -82,7 +88,8 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             var originValue = numeric.GetOriginValue();
             var targetAddModifierValue = numeric.GetAddModifierValueByTag(Info.Tags);
             var allAddModifierValue = numeric.GetAddModifierValue();
-            var hasSelfTag = Info.Tags.Contains(NumericModifierConfig.TagSelf);
+            // Empty tags should affect everything (including base value)
+            var hasSelfTag = Info.Tags.Length == 0 || Info.Tags.Contains(NumericModifierConfig.TagSelf);
 
             // Calculate what value would be WITHOUT any fraction modifiers (origin + additive only)
             var baseValue = originValue + allAddModifierValue;
@@ -127,9 +134,9 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             var multiplier = 1 + numerator * Info.Count / (float)denominator;
             var result = value * multiplier;
 
-            // Check for overflow/infinity
+            // 检查溢出/无穷大
             if (float.IsInfinity(result))
-                throw new OverflowException($"Fraction modifier calculation overflow: {value} * {multiplier}");
+                throw new OverflowException($"分数修饰符计算溢出: {value} * {multiplier}");
 
             return (int)result;
         }
@@ -139,15 +146,15 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             var fraction = numerator / (float)denominator;
             var power = MathF.Pow(fraction, Info.Count);
 
-            // Check for overflow in power calculation
+            // 检查幂运算中的溢出
             if (float.IsInfinity(power))
-                throw new OverflowException($"Fraction modifier power overflow: {fraction}^{Info.Count}");
+                throw new OverflowException($"分数修饰符幂运算溢出: {fraction}^{Info.Count}");
 
             var result = value * power;
 
-            // Check for overflow in final multiplication
+            // 检查最终乘法中的溢出
             if (float.IsInfinity(result))
-                throw new OverflowException($"Fraction modifier calculation overflow: {value} * {power}");
+                throw new OverflowException($"分数修饰符计算溢出: {value} * {power}");
 
             return (int)result;
         }

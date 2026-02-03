@@ -7,31 +7,31 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         ModifierType INumericModifier.Type => ModifierType.Custom;
         public NumericModifierInfo    Info { get; }
 
-        private readonly Func<int, int>     intFunc;
-        private readonly Func<float, float> floatFunc;
+        private readonly Func<int, int>?     intFunc;
+        private readonly Func<float, float>? floatFunc;
 
 
         public CustomNumericModifier(Func<int, int> intFunc)
         {
-            this.intFunc = intFunc;
+            this.intFunc = intFunc ?? throw new ArgumentNullException(nameof(intFunc), "intFunc 不能为 null。");
             Info         = NumericModifierConfig.DefaultInfo;
         }
 
         public CustomNumericModifier(Func<float, float> floatFunc)
         {
-            this.floatFunc = floatFunc;
+            this.floatFunc = floatFunc ?? throw new ArgumentNullException(nameof(floatFunc), "floatFunc 不能为 null。");
             Info           = NumericModifierConfig.DefaultInfo;
         }
 
         public CustomNumericModifier(Func<int, int> intFunc, string[] tags, string name, int count = 1)
         {
-            this.intFunc = intFunc;
+            this.intFunc = intFunc ?? throw new ArgumentNullException(nameof(intFunc), "intFunc 不能为 null。");
             Info         = new NumericModifierInfo(tags, name, count);
         }
 
         public CustomNumericModifier(Func<float, float> floatFunc, string[] tags, string name, int count = 1)
         {
-            this.floatFunc = floatFunc;
+            this.floatFunc = floatFunc ?? throw new ArgumentNullException(nameof(floatFunc), "floatFunc 不能为 null。");
             Info           = new NumericModifierInfo(tags, name, count);
         }
 

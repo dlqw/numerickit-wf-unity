@@ -23,10 +23,14 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         public static void ValidateFloat(float value, string? paramName = null)
         {
             if (float.IsNaN(value))
-                throw new ArgumentException("Value cannot be NaN.", paramName ?? nameof(value));
+                throw new ArgumentException("值不能为 NaN。", paramName ?? nameof(value));
 
             if (float.IsInfinity(value))
-                throw new ArgumentException("Value cannot be Infinity.", paramName ?? nameof(value));
+                throw new ArgumentException("值不能为 Infinity。", paramName ?? nameof(value));
+
+            // 添加范围检查，防止转换后溢出
+            if (MathF.Abs(value) > float.MaxValue / Factor)
+                throw new ArgumentException($"值 {value} 过大，无法安全转换为定点数。", paramName ?? nameof(value));
         }
     }
 }
