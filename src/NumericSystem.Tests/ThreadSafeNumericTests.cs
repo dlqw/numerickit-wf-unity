@@ -99,7 +99,14 @@ namespace NumericSystem.Tests
             // Arrange
             var safeNumeric = new ThreadSafeNumeric(100);
             safeNumeric += (20, new[] { "Equipment" }, "Armor", 1);
-            var readCount = 0;
+
+            // 预先计算 FinalValue，确保修饰符已应用
+            var expectedValue = safeNumeric.FinalValue;
+            Assert.Equal(120, expectedValue); // 验证预期值
+
+            var successCount = 0;
+            var failCount = 0;
+            var lockObj = new object();
             var tasks = new Task[10];
 
             // Act - 启动多个并发读操作
@@ -108,9 +115,16 @@ namespace NumericSystem.Tests
                 tasks[i] = Task.Run(() =>
                 {
                     var value = safeNumeric.FinalValue;
-                    if (value == 120)
+                    lock (lockObj)
                     {
-                        Interlocked.Increment(ref readCount);
+                        if (value == 120)
+                        {
+                            successCount++;
+                        }
+                        else
+                        {
+                            failCount++;
+                        }
                     }
                 });
             }
@@ -118,7 +132,8 @@ namespace NumericSystem.Tests
             Task.WaitAll(tasks);
 
             // Assert - 所有读操作都应该成功完成
-            Assert.Equal(10, readCount);
+            Assert.Equal(10, successCount);
+            Assert.Equal(0, failCount);
         }
 
         [Fact]
