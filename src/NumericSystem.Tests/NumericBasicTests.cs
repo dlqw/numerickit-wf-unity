@@ -1,3 +1,4 @@
+using System;
 using Xunit;
 using WFramework.CoreGameDevKit.NumericSystem;
 
@@ -25,7 +26,12 @@ namespace NumericSystem.Tests
             var numeric = new Numeric(100.5f);
 
             // Assert
-            Assert.Equal(1005000, numeric.GetOriginValue()); // 100.5 * 10000
+            // GetOriginValue() 返回用户友好的普通整数，而不是内部定点数
+            // 100.5 * 10000 = 1005000 (内部定点数) → / 10000 = 100 (用户整数)
+            Assert.Equal(100, numeric.GetOriginValue());
+
+            // FinalValueF 返回精确的浮点值
+            Assert.True(Math.Abs(numeric.FinalValueF - 100.5f) < 0.01f);
         }
 
         [Fact]

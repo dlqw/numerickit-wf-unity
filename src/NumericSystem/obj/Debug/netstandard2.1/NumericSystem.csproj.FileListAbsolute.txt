@@ -18,13 +18,3 @@ H:\Program\NumericSystem\src\NumericSystem\obj\Debug\netstandard2.1\NumericSyste
 H:\Program\NumericSystem\src\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.sourcelink.json
 H:\Program\NumericSystem\src\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.dll
 H:\Program\NumericSystem\src\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.pdb
-D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\bin\Debug\netstandard2.1\NumericSystem.deps.json
-D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\bin\Debug\netstandard2.1\NumericSystem.dll
-D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\bin\Debug\netstandard2.1\NumericSystem.pdb
-D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.GeneratedMSBuildEditorConfig.editorconfig
-D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.AssemblyInfoInputs.cache
-D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.AssemblyInfo.cs
-D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.csproj.CoreCompileInputs.cache
-D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.sourcelink.json
-D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.dll
-D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\obj\Debug\netstandard2.1\NumericSystem.pdb

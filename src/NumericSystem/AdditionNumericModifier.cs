@@ -17,26 +17,28 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
         public AdditionNumericModifier(int value)
         {
-            StoreValue = value;
+            // 统一使用定点数表示，确保与Numeric内部表示一致
+            StoreValue = value.ToFixedPoint();
             Info       = DefaultInfo;
         }
 
         public AdditionNumericModifier(float value)
         {
-            NumericValidator.ValidateFloat(value);
+            FixedPoint.ValidateFloat(value);
             StoreValue = value.ToFixedPoint();
             Info       = DefaultInfo;
         }
 
         public AdditionNumericModifier(int value, string[] tags, string name, int count = 1)
         {
-            StoreValue = value;
+            // 统一使用定点数表示，确保与Numeric内部表示一致
+            StoreValue = value.ToFixedPoint();
             Info       = new NumericModifierInfo(tags, name, count);
         }
 
         public AdditionNumericModifier(float value, string[] tags, string name, int count = 1)
         {
-            NumericValidator.ValidateFloat(value);
+            FixedPoint.ValidateFloat(value);
             StoreValue = value.ToFixedPoint();
             Info       = new NumericModifierInfo(tags, name, count);
         }

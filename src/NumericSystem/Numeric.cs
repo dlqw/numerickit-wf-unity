@@ -58,7 +58,12 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// 应用所有修饰符后的整数值。如果修饰符已变更，会触发重新计算。
         /// </value>
         /// <remarks>
+        /// <para>
         /// 此属性会触发 <see cref="Update()"/> 方法以确保返回最新的计算结果。
+        /// </para>
+        /// <para>
+        /// 返回值是内部定点数转换后的整数（除以10000），如果计算结果有小数部分，会被截断。
+        /// </para>
         /// </remarks>
         /// <example>
         /// <code>
@@ -72,7 +77,8 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             get
             {
                 Update();
-                return finalValue;
+                // 将内部定点数转换为普通整数返回
+                return finalValue / (int)FixedPoint.Factor;
             }
         }
 
@@ -148,7 +154,12 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// 数值的原始基础值，不受任何修饰符影响。
         /// </returns>
         /// <remarks>
+        /// <para>
         /// 基础值在构造时设置且不可更改。要更改基础值，需要创建新的 Numeric 对象。
+        /// </para>
+        /// <para>
+        /// 返回值是内部定点数转换后的整数。
+        /// </para>
         /// </remarks>
         /// <example>
         /// <code>
@@ -158,16 +169,17 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// int final = numeric.FinalValue;        // 150
         /// </code>
         /// </example>
-        public int GetOriginValue() => originalValue;
+        public int GetOriginValue() => originalValue / (int)FixedPoint.Factor;
 
         /// <summary>
         /// 获取所有加法修饰符的累积值。
         /// </summary>
         /// <returns>
-        /// 所有加法修饰符的累积效果（StoreValue × Count 之和）。
+        /// 所有加法修饰符的累积效果（StoreValue × Count 之和），转换为普通整数。
         /// </returns>
         /// <remarks>
         /// 此方法仅计算加法修饰符，不包括分数修饰符和自定义修饰符的效果。
+        /// 返回值已从定点数转换为普通整数。
         /// </remarks>
         public int GetAddModifierValue()
         {
@@ -176,7 +188,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             {
                 if (mod.Type == ModifierType.Add)
                 {
-                    sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue;
+                    sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue / (int)FixedPoint.Factor;
                 }
             }
             return sum;
@@ -187,10 +199,11 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </summary>
         /// <param name="tags">标签数组，用于筛选修饰符。</param>
         /// <returns>
-        /// 所有 Tags 与指定标签有交集的加法修饰符的累积效果。
+        /// 所有 Tags 与指定标签有交集的加法修饰符的累积效果，转换为普通整数。
         /// </returns>
         /// <remarks>
         /// 如果修饰符的 Tags 数组与指定标签数组有任何重叠，则计入计算。
+        /// 返回值已从定点数转换为普通整数。
         /// </remarks>
         public int GetAddModifierValueByTag(string[] tags)
         {
@@ -219,7 +232,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
                     if (hasMatch)
                     {
-                        sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue;
+                        sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue / (int)FixedPoint.Factor;
                     }
                 }
             }
@@ -429,18 +442,25 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </summary>
         /// <param name="value">数值的初始基础值。</param>
         /// <remarks>
-        /// 使用整数构造函数时，值直接存储而不进行定点数转换。
+        /// <para>
+        /// 使用整数构造函数时，值会被转换为定点数存储，确保内部表示的一致性。
+        /// </para>
+        /// <para>
+        /// <strong>注意：</strong> 无论使用int还是float构造函数，内部都统一使用定点数表示，
+        /// 这确保了跨平台的一致性和混合使用的正确性。
+        /// </para>
         /// </remarks>
         /// <example>
         /// <code>
-        /// var health = new Numeric(100);
-        /// var mana = new Numeric(50);
+        /// var health = new Numeric(100);    // 内部存储为 1000000 (100 * 10000)
+        /// var mana = new Numeric(50);      // 内部存储为 500000 (50 * 10000)
         /// </code>
         /// </example>
         public Numeric(int value)
         {
-            originalValue = value;
-            lastValue     = value;
+            // 统一使用定点数表示，确保内部一致性
+            originalValue = value.ToFixedPoint();
+            lastValue     = originalValue;
         }
 
         /// <summary>

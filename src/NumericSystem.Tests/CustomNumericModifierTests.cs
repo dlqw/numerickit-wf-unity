@@ -48,7 +48,7 @@ namespace NumericSystem.Tests
 
             // Act
             numeric.AddModifier(new CustomNumericModifier(minClamp));
-            numeric -= 100; // Would be 0, but clamped to 50
+            numeric += -100; // 100 + (-100) = 0, clamped to 50
 
             // Assert
             Assert.Equal(50, numeric.FinalValue);

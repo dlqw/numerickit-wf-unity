@@ -16,7 +16,8 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
         public FractionNumericModifier(int numerator, int denominator, FractionType type)
         {
-            NumericValidator.ValidateDenominator(denominator, nameof(denominator));
+            if (denominator == 0)
+                throw new ArgumentException("分母不能为零。", nameof(denominator));
 
             this.numerator   = numerator;
             this.denominator = denominator;
@@ -34,7 +35,8 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             string       name,
             int          count = 1)
         {
-            NumericValidator.ValidateDenominator(denominator, nameof(denominator));
+            if (denominator == 0)
+                throw new ArgumentException("分母不能为零。", nameof(denominator));
 
             this.numerator   = numerator;
             this.denominator = denominator;

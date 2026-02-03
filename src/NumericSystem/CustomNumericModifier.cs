@@ -13,29 +13,25 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
         public CustomNumericModifier(Func<int, int> intFunc)
         {
-            NumericValidator.ValidateFunc(intFunc, nameof(intFunc));
-            this.intFunc = intFunc;
+            this.intFunc = intFunc ?? throw new ArgumentNullException(nameof(intFunc), "intFunc 不能为 null。");
             Info         = NumericModifierConfig.DefaultInfo;
         }
 
         public CustomNumericModifier(Func<float, float> floatFunc)
         {
-            NumericValidator.ValidateFunc(floatFunc, nameof(floatFunc));
-            this.floatFunc = floatFunc;
+            this.floatFunc = floatFunc ?? throw new ArgumentNullException(nameof(floatFunc), "floatFunc 不能为 null。");
             Info           = NumericModifierConfig.DefaultInfo;
         }
 
         public CustomNumericModifier(Func<int, int> intFunc, string[] tags, string name, int count = 1)
         {
-            NumericValidator.ValidateFunc(intFunc, nameof(intFunc));
-            this.intFunc = intFunc;
+            this.intFunc = intFunc ?? throw new ArgumentNullException(nameof(intFunc), "intFunc 不能为 null。");
             Info         = new NumericModifierInfo(tags, name, count);
         }
 
         public CustomNumericModifier(Func<float, float> floatFunc, string[] tags, string name, int count = 1)
         {
-            NumericValidator.ValidateFunc(floatFunc, nameof(floatFunc));
-            this.floatFunc = floatFunc;
+            this.floatFunc = floatFunc ?? throw new ArgumentNullException(nameof(floatFunc), "floatFunc 不能为 null。");
             Info           = new NumericModifierInfo(tags, name, count);
         }
 
@@ -53,7 +49,12 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             return _ =>
             {
                 if (intFunc != null)
-                    return intFunc.Invoke(source);
+                {
+                    // 将内部定点数转换为普通整数传给函数，然后再转回定点数
+                    int normalValue = source / (int)FixedPoint.Factor;
+                    int result = intFunc.Invoke(normalValue);
+                    return result.ToFixedPoint();
+                }
 
                 if (floatFunc != null)
                     return floatFunc.Invoke(source.ToFloat()).ToFixedPoint();
