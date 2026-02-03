@@ -12,7 +12,7 @@
 <img src="https://img.shields.io/badge/framework-WFramework-blue">
 <img alt="Static Badge" src="https://img.shields.io/badge/tests-129%20passed-success">
 <img alt="Static Badge" src="https://img.shields.io/badge/version-1.2.0-blue">
-<img alt="Static Badge" src="https://img.shields.io/badge/readme-%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3-red?link=https%3A%2F%2Fgithub.com%2Fdlqw%2Fnumerickit-wf-unity%2Fblob%2Fmain%2FREADME_CN.md">
+<img alt="Static Badge" src="https://img.shields.io/badge/readme-%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3-red?style=flat&link=https%3A%2F%2Fgithub.com%2Fdlqw%2Fnumerickit-wf-unity%2Fblob%2Fmain%2FREADME_CN.md">
 </p>
 
 ## Introduction
