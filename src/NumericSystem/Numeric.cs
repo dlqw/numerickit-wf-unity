@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using WFramework.CoreGameDevKit.NumericSystem.Core;
 
 namespace WFramework.CoreGameDevKit.NumericSystem
 {
@@ -20,13 +21,22 @@ namespace WFramework.CoreGameDevKit.NumericSystem
     /// <item><description><strong>延迟计算</strong>：仅在修饰符变更时重新计算最终值</description></item>
     /// <item><description><strong>修饰符支持</strong>：支持加法、分数和自定义修饰符</description></item>
     /// <item><description><strong>定点数内部表示</strong>：确保跨平台数值一致性</description></item>
+    /// <item><description><strong>可扩展架构</strong>：使用策略模式和责任链模式</description></item>
     /// </list>
     /// <para>
     /// <strong>计算流程：</strong>
     /// </para>
     /// <code>
-    /// FinalValue = (((originalValue + 加法修饰符) × 分数修饰符) 应用自定义约束)
+    /// FinalValue = (((originalValue + 加法修饰符) × 分数修饰符) 应用自定义约束) 应用条件修饰符
     /// </code>
+    /// <para>
+    /// <strong>架构说明：</strong>
+    /// </para>
+    /// <list type="bullet">
+    /// <item><description>使用 <see cref="IModifierCollection"/> 管理修饰符存储</description></item>
+    /// <item><description>使用 <see cref="IModifierSorter"/> 对修饰符排序</description></item>
+    /// <item><description>使用 <see cref="IModifierEvaluator"/> 评估修饰符效果</description></item>
+    /// </list>
     /// </remarks>
     /// <example>
     /// <code>
@@ -50,6 +60,42 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// 缓存的最终计算结果。
         /// </summary>
         private int finalValue;
+
+        /// <summary>
+        /// 上次计算的最终值，用于优化重复访问。
+        /// </summary>
+        private int lastValue;
+
+        /// <summary>
+        /// 标识是否需要重新计算最终值。
+        /// </summary>
+        private bool hasUpdate = true;
+
+        /// <summary>
+        /// 修饰符集合，使用新架构的集合接口
+        /// </summary>
+        private readonly IModifierCollection modifierCollection;
+
+        /// <summary>
+        /// 修饰符排序器，使用新架构的排序器接口
+        /// </summary>
+        private readonly IModifierSorter modifierSorter;
+
+        /// <summary>
+        /// 自定义约束修饰符集合。
+        /// </summary>
+        /// <remarks>
+        /// 约束修饰符在所有普通修饰符应用之后执行，用于强制执行特定的约束条件（如范围限制）。
+        /// </remarks>
+        private readonly HashSet<CustomNumericModifier> constraintModifier = new HashSet<CustomNumericModifier>();
+
+        /// <summary>
+        /// 条件修饰符集合。
+        /// </summary>
+        /// <remarks>
+        /// 条件修饰符在约束修饰符之后执行，只在满足特定条件时生效。
+        /// </remarks>
+        private readonly HashSet<ConditionalNumericModifier> conditionalModifiers = new HashSet<ConditionalNumericModifier>();
 
         /// <summary>
         /// 获取应用所有修饰符后的最终整数值。
@@ -116,46 +162,6 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         }
 
         /// <summary>
-        /// 上次计算的最终值，用于优化重复访问。
-        /// </summary>
-        private int lastValue;
-
-        /// <summary>
-        /// 标识是否需要重新计算最终值。
-        /// </summary>
-        private bool hasUpdate = true;
-
-        /// <summary>
-        /// 普通修饰符集合（加法修饰符和分数修饰符）。
-        /// </summary>
-        private readonly HashSet<INumericModifier> modifiers = new HashSet<INumericModifier>();
-
-        /// <summary>
-        /// 修饰符名称查找字典，用于O(1)时间复杂度的查找操作。
-        /// </summary>
-        /// <remarks>
-        /// 此字典与 <see cref="modifiers"/> 集合同步，提供按名称快速查找修饰符的能力。
-        /// 键为修饰符的 <see cref="NumericModifierInfo.Name"/>，值为修饰符实例。
-        /// </remarks>
-        private readonly Dictionary<string, INumericModifier> modifierLookup = new Dictionary<string, INumericModifier>();
-
-        /// <summary>
-        /// 自定义约束修饰符集合。
-        /// </summary>
-        /// <remarks>
-        /// 约束修饰符在所有普通修饰符应用之后执行，用于强制执行特定的约束条件（如范围限制）。
-        /// </remarks>
-        private readonly HashSet<CustomNumericModifier> constraintModifier = new HashSet<CustomNumericModifier>();
-
-        /// <summary>
-        /// 条件修饰符集合。
-        /// </summary>
-        /// <remarks>
-        /// 条件修饰符在约束修饰符之后执行，只在满足特定条件时生效。
-        /// </remarks>
-        private readonly HashSet<ConditionalNumericModifier> conditionalModifiers = new HashSet<ConditionalNumericModifier>();
-
-        /// <summary>
         /// 获取数值的原始基础值（内部定点数形式）。
         /// </summary>
         /// <returns>
@@ -192,15 +198,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </remarks>
         public int GetAddModifierValue()
         {
-            int sum = 0;
-            foreach (var mod in modifiers)
-            {
-                if (mod.Type == ModifierType.Add)
-                {
-                    sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue;
-                }
-            }
-            return sum;
+            return modifierCollection.GetAddModifierValue();
         }
 
         /// <summary>
@@ -216,36 +214,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </remarks>
         public int GetAddModifierValueByTag(string[] tags)
         {
-            int sum = 0;
-            foreach (var mod in modifiers)
-            {
-                if (mod.Type == ModifierType.Add)
-                {
-                    // 检查标签是否有交集（等同于 Tags.Intersect(tags).Any()）
-                    var modTags = mod.Info.Tags;
-                    bool hasMatch = false;
-
-                    // 检查是否有任何标签重叠
-                    foreach (var tag in modTags)
-                    {
-                        foreach (var searchTag in tags)
-                        {
-                            if (tag == searchTag)
-                            {
-                                hasMatch = true;
-                                break;
-                            }
-                        }
-                        if (hasMatch) break;
-                    }
-
-                    if (hasMatch)
-                    {
-                        sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue;
-                    }
-                }
-            }
-            return sum;
+            return modifierCollection.GetAddModifierValueByTag(tags);
         }
 
         /// <summary>
@@ -261,6 +230,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </para>
         /// <list type="bullet">
         /// <item><description><see cref="CustomNumericModifier"/> 添加到约束修饰符集合，可以存在多个同名实例</description></item>
+        /// <item><description><see cref="ConditionalNumericModifier"/> 添加到条件修饰符集合</description></item>
         /// <item><description>其他修饰符添加到普通修饰符集合</description></item>
         /// <item><description>如果已存在同名修饰符，则累加 Count 而不是创建新实例</description></item>
         /// </list>
@@ -285,23 +255,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             }
             else
             {
-                var modifierName = modifier.Info.Name;
-
-                // 匿名修饰符（使用默认名称）不应该合并，每个都独立添加
-                if (modifierName == NumericModifierConfig.DefaultName)
-                {
-                    modifiers.Add(modifier);
-                }
-                // 命名修饰符：查找同名修饰符并合并（累加Count）
-                else if (modifierLookup.TryGetValue(modifierName, out var existModifier))
-                {
-                    existModifier.Info.Count += modifier.Info.Count;
-                }
-                else
-                {
-                    modifiers.Add(modifier);
-                    modifierLookup[modifierName] = modifier;
-                }
+                modifierCollection.Add(modifier);
             }
 
             hasUpdate = true;
@@ -321,8 +275,8 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </para>
         /// <list type="bullet">
         /// <item><description><see cref="CustomNumericModifier"/>：直接从约束集合中移除</description></item>
-        /// <item><description>其他修饰符：减少同名修饰符的 Count</description></item>
-        /// <item><description>当 Count 减至 0 或以下时，从集合中移除修饰符</description></item>
+        /// <item><description><see cref="ConditionalNumericModifier"/>：直接从条件集合中移除</description></item>
+        /// <item><description>其他修饰符：通过修饰符集合移除</description></item>
         /// </list>
         /// </remarks>
         /// <example>
@@ -345,52 +299,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             }
             else
             {
-                var modifierName = modifier.Info.Name;
-
-                // 匿名修饰符：按类型和值查找并移除
-                if (modifierName == NumericModifierConfig.DefaultName)
-                {
-                    // 需要按类型和值查找匹配的匿名修饰符
-                    INumericModifier? toRemove = null;
-                    foreach (var mod in modifiers)
-                    {
-                        if (mod.Info.Name == NumericModifierConfig.DefaultName &&
-                            mod.Type == modifier.Type)
-                        {
-                            if (modifier.Type == ModifierType.Add &&
-                                mod is AdditionNumericModifier addMod &&
-                                modifier is AdditionNumericModifier addInput &&
-                                addMod.StoreValue == addInput.StoreValue)
-                            {
-                                toRemove = mod;
-                                break;
-                            }
-                            else if (modifier.Type == ModifierType.Frac &&
-                                     mod is FractionNumericModifier fracMod &&
-                                     modifier is FractionNumericModifier fracInput &&
-                                     fracMod.Info.Tags == fracInput.Info.Tags)
-                            {
-                                toRemove = mod;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (toRemove != null)
-                    {
-                        modifiers.Remove(toRemove);
-                    }
-                }
-                // 命名修饰符：查找同名修饰符并减少Count
-                else if (modifierLookup.TryGetValue(modifierName, out var existModifier))
-                {
-                    existModifier.Info.Count -= modifier.Info.Count;
-                    if (existModifier.Info.Count <= 0)
-                    {
-                        modifiers.Remove(existModifier);
-                        modifierLookup.Remove(modifierName);
-                    }
-                }
+                modifierCollection.Remove(modifier);
             }
 
             hasUpdate = true;
@@ -404,7 +313,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// 此 Numeric 对象（支持链式调用）。
         /// </returns>
         /// <remarks>
-        /// 此方法仅移除普通修饰符，不影响约束修饰符（CustomNumericModifier）。
+        /// 此方法仅移除普通修饰符，不影响约束修饰符（CustomNumericModifier）和条件修饰符。
         /// </remarks>
         /// <example>
         /// <code>
@@ -417,8 +326,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </example>
         public Numeric Clear()
         {
-            modifiers.Clear();
-            modifierLookup.Clear();
+            modifierCollection.Clear();
             return this;
         }
 
@@ -434,6 +342,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// <item><description>从原始值开始</description></item>
         /// <item><description>依次应用所有普通修饰符（加法修饰符、分数修饰符）</description></item>
         /// <item><description>应用所有约束修饰符</description></item>
+        /// <item><description>应用所有条件修饰符</description></item>
         /// <item><description>缓存结果并重置 <see cref="hasUpdate"/> 标志</description></item>
         /// </list>
         /// </remarks>
@@ -447,60 +356,21 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
             finalValue = originalValue;
 
-            // 按优先级排序后应用修饰符
-            // 使用 LINQ OrderBy 确保修饰符按优先级从小到大依次应用
-            var sortedModifiers = new List<INumericModifier>(modifiers);
-            sortedModifiers.Sort((a, b) =>
-            {
-                int priorityCompare = a.Info.Priority.CompareTo(b.Info.Priority);
-                if (priorityCompare != 0)
-                    return priorityCompare;
+            // 获取所有普通修饰符并排序
+            var allModifiers = modifierCollection.GetAll();
+            var sortedModifiers = modifierSorter.Sort(allModifiers);
 
-                // 优先级相同时，按名称排序保证稳定性
-                int nameCompare = string.Compare(a.Info.Name, b.Info.Name, StringComparison.Ordinal);
-                if (nameCompare != 0)
-                    return nameCompare;
-
-                // 名称也相同时，按计数排序
-                return a.Info.Count.CompareTo(b.Info.Count);
-            });
-
+            // 应用排序后的修饰符
             foreach (var modifier in sortedModifiers)
                 finalValue = modifier.Apply(finalValue)(this);
 
             // 约束修饰符始终最后应用，按优先级排序
-            var sortedConstraints = new List<CustomNumericModifier>(constraintModifier);
-            sortedConstraints.Sort((a, b) =>
-            {
-                int priorityCompare = a.Info.Priority.CompareTo(b.Info.Priority);
-                if (priorityCompare != 0)
-                    return priorityCompare;
-
-                int nameCompare = string.Compare(a.Info.Name, b.Info.Name, StringComparison.Ordinal);
-                if (nameCompare != 0)
-                    return nameCompare;
-
-                return a.Info.Count.CompareTo(b.Info.Count);
-            });
-
+            var sortedConstraints = modifierSorter.Sort(constraintModifier.ToList());
             foreach (var customNumericModifier in sortedConstraints)
                 finalValue = customNumericModifier.Apply(finalValue)(this);
 
             // 条件修饰符在约束修饰符之后应用，按优先级排序
-            var sortedConditional = new List<ConditionalNumericModifier>(conditionalModifiers);
-            sortedConditional.Sort((a, b) =>
-            {
-                int priorityCompare = a.Info.Priority.CompareTo(b.Info.Priority);
-                if (priorityCompare != 0)
-                    return priorityCompare;
-
-                int nameCompare = string.Compare(a.Info.Name, b.Info.Name, StringComparison.Ordinal);
-                if (nameCompare != 0)
-                    return nameCompare;
-
-                return a.Info.Count.CompareTo(b.Info.Count);
-            });
-
+            var sortedConditional = modifierSorter.Sort(conditionalModifiers.ToList());
             foreach (var conditionalModifier in sortedConditional)
                 finalValue = conditionalModifier.Apply(finalValue)(this);
 
@@ -532,6 +402,8 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             // 统一使用定点数表示，确保内部一致性
             originalValue = value.ToFixedPoint();
             lastValue     = originalValue;
+            modifierCollection = new ModifierCollection();
+            modifierSorter = new PriorityBasedModifierSorter();
         }
 
         /// <summary>
@@ -561,6 +433,8 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             NumericValidator.ValidateFloat(value);
             originalValue = value.ToFixedPoint();
             lastValue     = originalValue;
+            modifierCollection = new ModifierCollection();
+            modifierSorter = new PriorityBasedModifierSorter();
         }
 
         /// <summary>
@@ -673,7 +547,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         {
             Update();
             var allModifiers = new List<INumericModifier>();
-            allModifiers.AddRange(modifiers);
+            allModifiers.AddRange(modifierCollection.GetAll());
             allModifiers.AddRange(constraintModifier);
             allModifiers.AddRange(conditionalModifiers);
             return allModifiers.AsReadOnly();
