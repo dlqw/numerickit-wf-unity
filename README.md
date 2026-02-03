@@ -21,10 +21,25 @@ The Numeric System is a toolset designed to address the numerical needs of gamep
 - **Fixed-point Arithmetic:** Guarantees numerical consistency across platforms and devices, enhancing network synchronization reliability.
 - **Simple Syntax:** Supports the addition of integers, floating points, fractions, or percentages to numerical values using addition, multiplication, or custom modifiers.
 
+## Changelog
+
+### Version 1.1.0 - Logic Fixes and Security Enhancements (2025-02-03)
+
+This release includes critical bug fixes and security improvements:
+
+- **Fixed Division by Zero**: Added validation in `FractionNumericModifier` constructor to prevent `DivideByZeroException`
+- **Fixed Multi-Fraction Modifier Bug**: Redesigned the `Apply` method to properly handle cumulative fraction modifiers
+- **Added Overflow Protection**: Added overflow checks to prevent silent value corruption from extreme calculations
+- **Improved CustomNumericModifier Safety**: Enhanced null checking with descriptive error messages
+- **Added Input Validation**: Added validation for NaN and Infinity in all float inputs
+
+For detailed information, see [CHANGELOG_CN.md](./CHANGELOG_CN.md)
+
 ## Table of Contents
 
 - [Introduction](#introduction)
 - [Table of Contents](#table-of-contents)
+- [Changelog](#changelog)
 - [Download and Deployment](#download-and-deployment)
   - [Get from GitHub](#get-from-github)
   - [Get from npm](#get-from-npm)

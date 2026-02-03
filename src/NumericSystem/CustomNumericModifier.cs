@@ -46,9 +46,19 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
         public Func<Numeric, int> Apply(int source)
         {
-            return _ => intFunc?.Invoke(source)
-                     ?? floatFunc.Invoke(source.ToFloat())
-                                 .ToFixedPoint();
+            return _ =>
+            {
+                if (intFunc != null)
+                    return intFunc.Invoke(source);
+
+                if (floatFunc != null)
+                    return floatFunc.Invoke(source.ToFloat()).ToFixedPoint();
+
+                throw new InvalidOperationException(
+                    $"{nameof(CustomNumericModifier)} must have either intFunc or floatFunc configured. " +
+                    "Both functions are null. This may occur if the modifier was created through " +
+                    "deserialization without proper initialization.");
+            };
         }
     }
 }

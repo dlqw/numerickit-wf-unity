@@ -115,6 +115,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
         public Numeric(float value)
         {
+            FixedPoint.ValidateFloat(value);
             originalValue = value.ToFixedPoint();
             lastValue     = originalValue;
         }

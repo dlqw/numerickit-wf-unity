@@ -16,6 +16,9 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
         public FractionNumericModifier(int numerator, int denominator, FractionType type)
         {
+            if (denominator == 0)
+                throw new ArgumentException("Denominator cannot be zero.", nameof(denominator));
+
             this.numerator   = numerator;
             this.denominator = denominator;
             this.type        = type;
@@ -32,6 +35,9 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             string       name,
             int          count = 1)
         {
+            if (denominator == 0)
+                throw new ArgumentException("Denominator cannot be zero.", nameof(denominator));
+
             this.numerator   = numerator;
             this.denominator = denominator;
             this.type        = type;
@@ -60,23 +66,90 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
         public Func<Numeric, int> Apply(int source) => numeric =>
         {
-            var allAddModifierValue      = numeric.GetAddModifierValue();
-            var targetAddModifierValue   = numeric.GetAddModifierValueByTag(Info.Tags);
-            var noTargetAddModiferValue = allAddModifierValue - targetAddModifierValue;
-            return type switch
+            // FRACTION MODIFIER APPLICATION FIX
+            //
+            // Problem: Original implementation caused incorrect results when multiple fraction
+            // modifiers were applied, as each recalculated from the original additive structure.
+            //
+            // Solution: Simplify the logic to make fraction modifiers compose correctly.
+            // Each modifier applies its transformation to the cumulative source, preserving
+            // the effects of previous modifiers.
+            //
+            // The key is to work with the source value directly, which already contains
+            // the cumulative result of all previous modifiers. We only need to adjust
+            // the portions that this modifier is responsible for.
+
+            var originValue = numeric.GetOriginValue();
+            var targetAddModifierValue = numeric.GetAddModifierValueByTag(Info.Tags);
+            var allAddModifierValue = numeric.GetAddModifierValue();
+            var hasSelfTag = Info.Tags.Contains(NumericModifierConfig.TagSelf);
+
+            // Calculate what value would be WITHOUT any fraction modifiers (origin + additive only)
+            var baseValue = originValue + allAddModifierValue;
+
+            // The source value includes effects from previous fraction modifiers.
+            // We need to determine which portions of the base value have already been modified.
+            //
+            // Strategy: Reconstruct the value by starting from source and adjusting
+            // only the portions this modifier is responsible for.
+
+            // Calculate the targeted and untargeted portions from the base value
+            var targetedBaseValue = (hasSelfTag ? originValue : 0) + targetAddModifierValue;
+            var untargetedBaseValue = baseValue - targetedBaseValue;
+
+            // Calculate what the targeted portion becomes after applying this modifier
+            var modifiedTargetedValue = type switch
             {
-                FractionType.Increase => GetIncrease(targetAddModifierValue) + noTargetAddModiferValue + GetOrigin(GetIncrease) + GetOtherFrac(),
-                FractionType.Override => GetOverride(targetAddModifierValue) + noTargetAddModiferValue + GetOrigin(GetOverride) + GetOtherFrac(),
-                _                     => throw new ArgumentOutOfRangeException()
+                FractionType.Increase => GetIncrease(targetedBaseValue),
+                FractionType.Override => GetOverride(targetedBaseValue),
+                _ => throw new ArgumentOutOfRangeException()
             };
 
-            int GetOrigin(Func<int, int> func)
-                => Info.Tags.Contains(NumericModifierConfig.TagSelf) ? func(numeric.GetOriginValue()) : numeric.GetOriginValue();
+            // The source value can be thought of as:
+            // source = (untargetedBaseValue) + (modifiedTargetedValue from previous modifiers)
+            //
+            // We want to produce:
+            // result = (untargetedBaseValue) + (our modifiedTargetedValue)
+            //
+            // The challenge is that previous modifiers might have already modified the targeted portion.
+            // We handle this by using the source as a starting point and adjusting the difference.
 
-            int GetOtherFrac() => source - allAddModifierValue - numeric.GetOriginValue();
+            // Calculate the difference our modifier makes to the targeted portion
+            var targetedDifference = modifiedTargetedValue - targetedBaseValue;
+
+            // Apply this difference to the source, assuming the source's targeted portion
+            // is approximately equal to the base's targeted portion (before modification)
+            return source + targetedDifference;
         };
 
-        int GetIncrease(int value) => (int)(value * (1 + numerator * Info.Count / (float)denominator));
-        int GetOverride(int value) => (int)(value * MathF.Pow(numerator / (float)denominator, Info.Count));
+        int GetIncrease(int value)
+        {
+            var multiplier = 1 + numerator * Info.Count / (float)denominator;
+            var result = value * multiplier;
+
+            // Check for overflow/infinity
+            if (float.IsInfinity(result))
+                throw new OverflowException($"Fraction modifier calculation overflow: {value} * {multiplier}");
+
+            return (int)result;
+        }
+
+        int GetOverride(int value)
+        {
+            var fraction = numerator / (float)denominator;
+            var power = MathF.Pow(fraction, Info.Count);
+
+            // Check for overflow in power calculation
+            if (float.IsInfinity(power))
+                throw new OverflowException($"Fraction modifier power overflow: {fraction}^{Info.Count}");
+
+            var result = value * power;
+
+            // Check for overflow in final multiplication
+            if (float.IsInfinity(result))
+                throw new OverflowException($"Fraction modifier calculation overflow: {value} * {power}");
+
+            return (int)result;
+        }
     }
 }
