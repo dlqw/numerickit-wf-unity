@@ -46,7 +46,7 @@ Numeric System 是一个功能强大、灵活性高的工具集，旨在为战�
 - 📚 性能基准测试文档
 - 📚 架构重构计划
 
-详细信息请参阅 [CHANGELOG.md](./CHANGELOG.md)
+详细信息请参阅 [changelogs/1.2.0_CN.md](./changelogs/1.2.0_CN.md)
 
 ### 版本 1.1.0 - 逻辑修复与安全增强 (2025-02-03)
 

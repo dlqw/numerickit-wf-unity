@@ -1,5 +1,8 @@
 is_global = true
 build_property.RootNamespace = NumericSystem
-build_property.ProjectDir = H:\Program\NumericSystem\src\NumericSystem\
+build_property.ProjectDir = D:\rdququ\Documents\GitHub\numerickit-wf-unity\src\NumericSystem\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.CsWinRTUseWindowsUIXamlProjections = false
+build_property.EffectiveAnalysisLevelStyle = 
+build_property.EnableCodeStyleSeverity = 

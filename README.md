@@ -52,7 +52,7 @@ This major release adds advanced features while maintaining 100% backward compat
 - 📚 Performance benchmark documentation
 - 📚 Architecture refactoring plan
 
-For detailed information, see [CHANGELOG.md](./CHANGELOG.md)
+For detailed information, see [changelogs/1.2.0.md](./changelogs/1.2.0.md)
 
 ### Version 1.1.0 - Logic Fixes and Security Enhancements (2025-02-03)
 
