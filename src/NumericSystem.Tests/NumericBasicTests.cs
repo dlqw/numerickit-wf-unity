@@ -16,7 +16,9 @@ namespace NumericSystem.Tests
             var numeric = new Numeric(100);
 
             // Assert
-            Assert.Equal(100, numeric.GetOriginValue());
+            // GetOriginValue() 返回内部定点数，FinalValue 返回用户友好的普通整数
+            Assert.Equal(1000000, numeric.GetOriginValue()); // 100 * 10000
+            Assert.Equal(100, numeric.FinalValue);         // 用户友好的值
         }
 
         [Fact]
@@ -65,7 +67,9 @@ namespace NumericSystem.Tests
             Numeric numeric = 100;
 
             // Act & Assert
-            Assert.Equal(100, numeric.GetOriginValue());
+            // GetOriginValue() 返回内部定点数
+            Assert.Equal(1000000, numeric.GetOriginValue());
+            // FinalValue 返回用户友好的普通整数
             Assert.Equal(100, numeric.FinalValue);
         }
 
