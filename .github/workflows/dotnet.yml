@@ -17,13 +17,13 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: "6.0.x"
 
       - name: Restore dependencies
-        run: dotnet restore src/NumericSystem.sln # 使用 .sln 文件进行还原
+        run: dotnet restore src/NumericSystem.sln
 
       - name: Build project
-        run: dotnet build src/NumericSystem.sln --no-restore --configuration Release # 使用 .sln 文件构建
+        run: dotnet build src/NumericSystem.sln --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test src/NumericSystem.sln --no-build --verbosity normal --configuration Release # 使用 .sln 文件运行测试
+        run: dotnet test src/NumericSystem.sln --no-build --verbosity normal --configuration Release
