@@ -125,6 +125,15 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         private readonly HashSet<INumericModifier> modifiers = new HashSet<INumericModifier>();
 
         /// <summary>
+        /// 修饰符名称查找字典，用于O(1)时间复杂度的查找操作。
+        /// </summary>
+        /// <remarks>
+        /// 此字典与 <see cref="modifiers"/> 集合同步，提供按名称快速查找修饰符的能力。
+        /// 键为修饰符的 <see cref="NumericModifierInfo.Name"/>，值为修饰符实例。
+        /// </remarks>
+        private readonly Dictionary<string, INumericModifier> modifierLookup = new Dictionary<string, INumericModifier>();
+
+        /// <summary>
         /// 自定义约束修饰符集合。
         /// </summary>
         /// <remarks>
@@ -161,8 +170,17 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// 此方法仅计算加法修饰符，不包括分数修饰符和自定义修饰符的效果。
         /// </remarks>
         public int GetAddModifierValue()
-            => modifiers.Where(mod => mod.Type == ModifierType.Add)
-                        .Sum(mod => mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue);
+        {
+            int sum = 0;
+            foreach (var mod in modifiers)
+            {
+                if (mod.Type == ModifierType.Add)
+                {
+                    sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue;
+                }
+            }
+            return sum;
+        }
 
         /// <summary>
         /// 获取具有指定标签的加法修饰符的累积值。
@@ -175,9 +193,38 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// 如果修饰符的 Tags 数组与指定标签数组有任何重叠，则计入计算。
         /// </remarks>
         public int GetAddModifierValueByTag(string[] tags)
-            => modifiers.Where(mod => mod.Type == ModifierType.Add)
-                        .Where(mod => mod.Info.Tags.Intersect(tags).Any())
-                        .Sum(mod => mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue);
+        {
+            int sum = 0;
+            foreach (var mod in modifiers)
+            {
+                if (mod.Type == ModifierType.Add)
+                {
+                    // 检查标签是否有交集（等同于 Tags.Intersect(tags).Any()）
+                    var modTags = mod.Info.Tags;
+                    bool hasMatch = false;
+
+                    // 检查是否有任何标签重叠
+                    foreach (var tag in modTags)
+                    {
+                        foreach (var searchTag in tags)
+                        {
+                            if (tag == searchTag)
+                            {
+                                hasMatch = true;
+                                break;
+                            }
+                        }
+                        if (hasMatch) break;
+                    }
+
+                    if (hasMatch)
+                    {
+                        sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue;
+                    }
+                }
+            }
+            return sum;
+        }
 
         /// <summary>
         /// 添加一个修饰符到此 Numeric 对象。
@@ -211,9 +258,17 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             }
             else
             {
-                var existModifier = modifiers.FirstOrDefault(mod => mod.Info.Name == modifier.Info.Name);
-                if (existModifier != null) existModifier.Info.Count += modifier.Info.Count;
-                else modifiers.Add(modifier);
+                // 使用字典查找代替LINQ FirstOrDefault，O(1) vs O(n)
+                var modifierName = modifier.Info.Name;
+                if (modifierLookup.TryGetValue(modifierName, out var existModifier))
+                {
+                    existModifier.Info.Count += modifier.Info.Count;
+                }
+                else
+                {
+                    modifiers.Add(modifier);
+                    modifierLookup[modifierName] = modifier;
+                }
             }
 
             hasUpdate = true;
@@ -253,11 +308,16 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             }
             else
             {
-                var existModifier = modifiers.FirstOrDefault(mod => mod.Info.Name == modifier.Info.Name);
-                if (existModifier != null)
+                // 使用字典查找代替LINQ FirstOrDefault，O(1) vs O(n)
+                var modifierName = modifier.Info.Name;
+                if (modifierLookup.TryGetValue(modifierName, out var existModifier))
                 {
                     existModifier.Info.Count -= modifier.Info.Count;
-                    if (existModifier.Info.Count <= 0) modifiers.Remove(existModifier);
+                    if (existModifier.Info.Count <= 0)
+                    {
+                        modifiers.Remove(existModifier);
+                        modifierLookup.Remove(modifierName);
+                    }
                 }
             }
 
@@ -286,6 +346,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         public Numeric Clear()
         {
             modifiers.Clear();
+            modifierLookup.Clear();
             return this;
         }
 
