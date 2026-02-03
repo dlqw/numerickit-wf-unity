@@ -8,23 +8,23 @@
     ".NETStandard,Version=v2.1": []
   },
   "packageFolders": {
-    "C:\\Users\\車部拟幻\\.nuget\\packages\\": {},
-    "H:\\qxyustudy\\VS2022\\sdk\\NuGetPackages": {}
+    "D:\\rdququ\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem.csproj",
+      "projectUniqueName": "D:\\rdququ\\Documents\\GitHub\\numerickit-wf-unity\\src\\NumericSystem\\NumericSystem.csproj",
       "projectName": "NumericSystem",
-      "projectPath": "H:\\Program\\NumericSystem\\src\\NumericSystem\\NumericSystem.csproj",
-      "packagesPath": "C:\\Users\\車部拟幻\\.nuget\\packages\\",
-      "outputPath": "H:\\Program\\NumericSystem\\src\\NumericSystem\\obj\\",
+      "projectPath": "D:\\rdququ\\Documents\\GitHub\\numerickit-wf-unity\\src\\NumericSystem\\NumericSystem.csproj",
+      "packagesPath": "D:\\rdququ\\.nuget\\packages\\",
+      "outputPath": "D:\\rdququ\\Documents\\GitHub\\numerickit-wf-unity\\src\\NumericSystem\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
-        "H:\\qxyustudy\\VS2022\\sdk\\NuGetPackages"
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\車部拟幻\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "D:\\rdququ\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -32,6 +32,8 @@
         "netstandard2.1"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "D:\\rdququ\\RiderProjects\\rdququ.witness.Json\\rdququ.witness.JsonGenerator\\bin\\Release": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -44,7 +46,13 @@
         "warnAsError": [
           "NU1605"
         ]
-      }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "netstandard2.1": {
@@ -65,7 +73,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Users\\車部拟幻\\.dotnet\\sdk\\8.0.203\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101\\RuntimeIdentifierGraph.json"
       }
     }
   }

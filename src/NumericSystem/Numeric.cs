@@ -258,9 +258,15 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             }
             else
             {
-                // 使用字典查找代替LINQ FirstOrDefault，O(1) vs O(n)
                 var modifierName = modifier.Info.Name;
-                if (modifierLookup.TryGetValue(modifierName, out var existModifier))
+
+                // 匿名修饰符（使用默认名称）不应该合并，每个都独立添加
+                if (modifierName == NumericModifierConfig.DefaultName)
+                {
+                    modifiers.Add(modifier);
+                }
+                // 命名修饰符：查找同名修饰符并合并（累加Count）
+                else if (modifierLookup.TryGetValue(modifierName, out var existModifier))
                 {
                     existModifier.Info.Count += modifier.Info.Count;
                 }
@@ -308,9 +314,44 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             }
             else
             {
-                // 使用字典查找代替LINQ FirstOrDefault，O(1) vs O(n)
                 var modifierName = modifier.Info.Name;
-                if (modifierLookup.TryGetValue(modifierName, out var existModifier))
+
+                // 匿名修饰符：按类型和值查找并移除
+                if (modifierName == NumericModifierConfig.DefaultName)
+                {
+                    // 需要按类型和值查找匹配的匿名修饰符
+                    INumericModifier? toRemove = null;
+                    foreach (var mod in modifiers)
+                    {
+                        if (mod.Info.Name == NumericModifierConfig.DefaultName &&
+                            mod.Type == modifier.Type)
+                        {
+                            if (modifier.Type == ModifierType.Add &&
+                                mod is AdditionNumericModifier addMod &&
+                                modifier is AdditionNumericModifier addInput &&
+                                addMod.StoreValue == addInput.StoreValue)
+                            {
+                                toRemove = mod;
+                                break;
+                            }
+                            else if (modifier.Type == ModifierType.Frac &&
+                                     mod is FractionNumericModifier fracMod &&
+                                     modifier is FractionNumericModifier fracInput &&
+                                     fracMod.Info.Tags == fracInput.Info.Tags)
+                            {
+                                toRemove = mod;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (toRemove != null)
+                    {
+                        modifiers.Remove(toRemove);
+                    }
+                }
+                // 命名修饰符：查找同名修饰符并减少Count
+                else if (modifierLookup.TryGetValue(modifierName, out var existModifier))
                 {
                     existModifier.Info.Count -= modifier.Info.Count;
                     if (existModifier.Info.Count <= 0)
