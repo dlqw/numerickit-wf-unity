@@ -1,5 +1,3 @@
-using System;
-
 namespace WFramework.CoreGameDevKit.NumericSystem
 {
     /// <summary>
@@ -99,14 +97,10 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </exception>
         public NumericModifierInfo(string[] tags, string name, int count)
         {
-            if (tags == null)
-                throw new ArgumentNullException(nameof(tags), "标签不能为 null。");
-            if (name == null)
-                throw new ArgumentNullException(nameof(name), "名称不能为 null。");
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("名称不能为空或空白字符。", nameof(name));
-            if (count <= 0)
-                throw new ArgumentOutOfRangeException(nameof(count), "计数必须大于零。");
+            // 使用统一的验证器
+            NumericValidator.ValidateTags(tags, nameof(tags));
+            NumericValidator.ValidateName(name, nameof(name));
+            NumericValidator.ValidateCount(count, nameof(count));
 
             Tags  = tags;
             Name  = name;

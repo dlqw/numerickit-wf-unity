@@ -23,7 +23,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
         public AdditionNumericModifier(float value)
         {
-            FixedPoint.ValidateFloat(value);
+            NumericValidator.ValidateFloat(value);
             StoreValue = value.ToFixedPoint();
             Info       = DefaultInfo;
         }
@@ -36,7 +36,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
         public AdditionNumericModifier(float value, string[] tags, string name, int count = 1)
         {
-            FixedPoint.ValidateFloat(value);
+            NumericValidator.ValidateFloat(value);
             StoreValue = value.ToFixedPoint();
             Info       = new NumericModifierInfo(tags, name, count);
         }

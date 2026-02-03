@@ -13,25 +13,29 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
         public CustomNumericModifier(Func<int, int> intFunc)
         {
-            this.intFunc = intFunc ?? throw new ArgumentNullException(nameof(intFunc), "intFunc 不能为 null。");
+            NumericValidator.ValidateFunc(intFunc, nameof(intFunc));
+            this.intFunc = intFunc;
             Info         = NumericModifierConfig.DefaultInfo;
         }
 
         public CustomNumericModifier(Func<float, float> floatFunc)
         {
-            this.floatFunc = floatFunc ?? throw new ArgumentNullException(nameof(floatFunc), "floatFunc 不能为 null。");
+            NumericValidator.ValidateFunc(floatFunc, nameof(floatFunc));
+            this.floatFunc = floatFunc;
             Info           = NumericModifierConfig.DefaultInfo;
         }
 
         public CustomNumericModifier(Func<int, int> intFunc, string[] tags, string name, int count = 1)
         {
-            this.intFunc = intFunc ?? throw new ArgumentNullException(nameof(intFunc), "intFunc 不能为 null。");
+            NumericValidator.ValidateFunc(intFunc, nameof(intFunc));
+            this.intFunc = intFunc;
             Info         = new NumericModifierInfo(tags, name, count);
         }
 
         public CustomNumericModifier(Func<float, float> floatFunc, string[] tags, string name, int count = 1)
         {
-            this.floatFunc = floatFunc ?? throw new ArgumentNullException(nameof(floatFunc), "floatFunc 不能为 null。");
+            NumericValidator.ValidateFunc(floatFunc, nameof(floatFunc));
+            this.floatFunc = floatFunc;
             Info           = new NumericModifierInfo(tags, name, count);
         }
 

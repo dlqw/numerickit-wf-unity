@@ -365,7 +365,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </example>
         public Numeric(float value)
         {
-            FixedPoint.ValidateFloat(value);
+            NumericValidator.ValidateFloat(value);
             originalValue = value.ToFixedPoint();
             lastValue     = originalValue;
         }
