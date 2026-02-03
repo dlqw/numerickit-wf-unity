@@ -20,7 +20,7 @@ Numeric System 是一个用于处理 gameplay 数值需求的工具集，旨在�
 - **改进 CustomNumericModifier 安全性**: 增强空值检查，提供描述性错误消息
 - **添加输入验证**: 在所有 float 输入中添加 NaN 和 Infinity 验证
 
-详细信息请参阅 [CHANGELOG_CN.md](./CHANGELOG_CN.md)
+详细信息请参阅 [changelogs/1.1.0_CN.md](./changelogs/1.1.0_CN.md)
 
 ## 目录
 

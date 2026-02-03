@@ -33,7 +33,7 @@ This release includes critical bug fixes and security improvements:
 - **Improved CustomNumericModifier Safety**: Enhanced null checking with descriptive error messages
 - **Added Input Validation**: Added validation for NaN and Infinity in all float inputs
 
-For detailed information, see [CHANGELOG_CN.md](./CHANGELOG_CN.md)
+For detailed information, see [changelogs/1.1.0_CN.md](./changelogs/1.1.0_CN.md)
 
 ## Table of Contents
 
