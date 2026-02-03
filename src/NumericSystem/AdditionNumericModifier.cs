@@ -3,6 +3,7 @@ using static WFramework.CoreGameDevKit.NumericSystem.NumericModifierConfig;
 
 namespace WFramework.CoreGameDevKit.NumericSystem
 {
+    [Serializable]
     public sealed class AdditionNumericModifier : INumericModifier
     {
         public readonly int StoreValue;
@@ -29,18 +30,18 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             Info       = DefaultInfo;
         }
 
-        public AdditionNumericModifier(int value, string[] tags, string name, int count = 1)
+        public AdditionNumericModifier(int value, string[] tags, string name, int count = 1, ModifierPriority priority = ModifierPriority.Default)
         {
             // 统一使用定点数表示，确保与Numeric内部表示一致
             StoreValue = value.ToFixedPoint();
-            Info       = new NumericModifierInfo(tags, name, count);
+            Info       = new NumericModifierInfo(tags, name, count, priority);
         }
 
-        public AdditionNumericModifier(float value, string[] tags, string name, int count = 1)
+        public AdditionNumericModifier(float value, string[] tags, string name, int count = 1, ModifierPriority priority = ModifierPriority.Default)
         {
             FixedPoint.ValidateFloat(value);
             StoreValue = value.ToFixedPoint();
-            Info       = new NumericModifierInfo(tags, name, count);
+            Info       = new NumericModifierInfo(tags, name, count, priority);
         }
 
         public static implicit operator AdditionNumericModifier(int value) => new(value);

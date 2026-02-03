@@ -7,7 +7,8 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         public const string TagSelf      = "SELF";
         public const string DefaultName  = "DEFAULT MODIFIER";
         public const int    DefaultCount = 1;
+        public const ModifierPriority DefaultPriority = ModifierPriority.Default;
 
-        public static NumericModifierInfo DefaultInfo => new(Array.Empty<string>(), DefaultName, DefaultCount);
+        public static NumericModifierInfo DefaultInfo => new(Array.Empty<string>(), DefaultName, DefaultCount, DefaultPriority);
     }
 }

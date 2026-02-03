@@ -148,6 +148,14 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         private readonly HashSet<CustomNumericModifier> constraintModifier = new HashSet<CustomNumericModifier>();
 
         /// <summary>
+        /// 条件修饰符集合。
+        /// </summary>
+        /// <remarks>
+        /// 条件修饰符在约束修饰符之后执行，只在满足特定条件时生效。
+        /// </remarks>
+        private readonly HashSet<ConditionalNumericModifier> conditionalModifiers = new HashSet<ConditionalNumericModifier>();
+
+        /// <summary>
         /// 获取数值的原始基础值（内部定点数形式）。
         /// </summary>
         /// <returns>
@@ -266,7 +274,12 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </example>
         public Numeric AddModifier(INumericModifier modifier)
         {
-            if (modifier is CustomNumericModifier customModifier)
+            // 检查是否为条件修饰符
+            if (modifier is ConditionalNumericModifier conditionalModifier)
+            {
+                conditionalModifiers.Add(conditionalModifier);
+            }
+            else if (modifier is CustomNumericModifier customModifier)
             {
                 constraintModifier.Add(customModifier);
             }
@@ -322,7 +335,11 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// </example>
         public Numeric RemoveModifier(INumericModifier modifier)
         {
-            if (modifier is CustomNumericModifier customModifier)
+            if (modifier is ConditionalNumericModifier conditionalModifier)
+            {
+                conditionalModifiers.Remove(conditionalModifier);
+            }
+            else if (modifier is CustomNumericModifier customModifier)
             {
                 constraintModifier.Remove(customModifier);
             }
@@ -429,10 +446,63 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             }
 
             finalValue = originalValue;
-            foreach (var modifier in modifiers) finalValue = modifier.Apply(finalValue)(this);
 
-            foreach (var customNumericModifier in constraintModifier) finalValue = customNumericModifier.Apply(finalValue)(this);
+            // 按优先级排序后应用修饰符
+            // 使用 LINQ OrderBy 确保修饰符按优先级从小到大依次应用
+            var sortedModifiers = new List<INumericModifier>(modifiers);
+            sortedModifiers.Sort((a, b) =>
+            {
+                int priorityCompare = a.Info.Priority.CompareTo(b.Info.Priority);
+                if (priorityCompare != 0)
+                    return priorityCompare;
 
+                // 优先级相同时，按名称排序保证稳定性
+                int nameCompare = string.Compare(a.Info.Name, b.Info.Name, StringComparison.Ordinal);
+                if (nameCompare != 0)
+                    return nameCompare;
+
+                // 名称也相同时，按计数排序
+                return a.Info.Count.CompareTo(b.Info.Count);
+            });
+
+            foreach (var modifier in sortedModifiers)
+                finalValue = modifier.Apply(finalValue)(this);
+
+            // 约束修饰符始终最后应用，按优先级排序
+            var sortedConstraints = new List<CustomNumericModifier>(constraintModifier);
+            sortedConstraints.Sort((a, b) =>
+            {
+                int priorityCompare = a.Info.Priority.CompareTo(b.Info.Priority);
+                if (priorityCompare != 0)
+                    return priorityCompare;
+
+                int nameCompare = string.Compare(a.Info.Name, b.Info.Name, StringComparison.Ordinal);
+                if (nameCompare != 0)
+                    return nameCompare;
+
+                return a.Info.Count.CompareTo(b.Info.Count);
+            });
+
+            foreach (var customNumericModifier in sortedConstraints)
+                finalValue = customNumericModifier.Apply(finalValue)(this);
+
+            // 条件修饰符在约束修饰符之后应用，按优先级排序
+            var sortedConditional = new List<ConditionalNumericModifier>(conditionalModifiers);
+            sortedConditional.Sort((a, b) =>
+            {
+                int priorityCompare = a.Info.Priority.CompareTo(b.Info.Priority);
+                if (priorityCompare != 0)
+                    return priorityCompare;
+
+                int nameCompare = string.Compare(a.Info.Name, b.Info.Name, StringComparison.Ordinal);
+                if (nameCompare != 0)
+                    return nameCompare;
+
+                return a.Info.Count.CompareTo(b.Info.Count);
+            });
+
+            foreach (var conditionalModifier in sortedConditional)
+                finalValue = conditionalModifier.Apply(finalValue)(this);
 
             lastValue = finalValue;
             hasUpdate = false;
@@ -588,5 +658,72 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         /// 移除修饰符后的 <paramref name="numeric"/> 对象（支持链式调用）。
         /// </returns>
         public static Numeric operator -(Numeric numeric, CustomNumericModifier modifier) => numeric.RemoveModifier(modifier);
+
+        #region 诊断和调试辅助方法
+
+        /// <summary>
+        /// 获取所有修饰符的只读集合
+        /// </summary>
+        /// <returns>包含所有修饰符的只读集合</returns>
+        /// <remarks>
+        /// 此方法供诊断工具使用，返回当前 Numeric 对象的所有修饰符。
+        /// 返回的集合是快照，不会随后续修改而更新。
+        /// </remarks>
+        public IReadOnlyList<INumericModifier> GetAllModifiers()
+        {
+            Update();
+            var allModifiers = new List<INumericModifier>();
+            allModifiers.AddRange(modifiers);
+            allModifiers.AddRange(constraintModifier);
+            allModifiers.AddRange(conditionalModifiers);
+            return allModifiers.AsReadOnly();
+        }
+
+        /// <summary>
+        /// 使缓存失效，强制重新计算
+        /// </summary>
+        /// <remarks>
+        /// 此方法主要用于测试和性能诊断。
+        /// 正常情况下，系统会自动管理缓存，不需要手动调用此方法。
+        /// </remarks>
+        public void InvalidateCache()
+        {
+            hasUpdate = true;
+        }
+
+        /// <summary>
+        /// 获取缓存状态信息
+        /// </summary>
+        /// <returns>包含缓存状态的字符串</returns>
+        /// <remarks>
+        /// 此方法用于诊断，显示当前缓存是否有效。
+        /// </remarks>
+        public string GetCacheStatus()
+        {
+            Update();
+            return hasUpdate ? "缓存无效（需要重新计算）" : "缓存有效";
+        }
+
+        /// <summary>
+        /// 获取修饰符数量统计
+        /// </summary>
+        /// <returns>包含各类型修饰符数量的字典</returns>
+        public Dictionary<string, int> GetModifierStats()
+        {
+            var stats = new Dictionary<string, int>();
+            var allModifiers = GetAllModifiers();
+
+            foreach (var mod in allModifiers)
+            {
+                var type = mod.Type.ToString();
+                if (!stats.ContainsKey(type))
+                    stats[type] = 0;
+                stats[type]++;
+            }
+
+            return stats;
+        }
+
+        #endregion
     }
 }

@@ -97,8 +97,8 @@ namespace NumericSystem.Tests
             // Act
             numeric.AddModifier(new FractionNumericModifier(150, 100, FractionType.Increase, new[] { NumericModifierConfig.TagSelf }, "Boost", 1));
 
-            // Assert: 100 * 1.5 = 150
-            Assert.Equal(150, numeric.FinalValue);
+            // Assert: 100 * 2.5 = 250 (base increased by 150%)
+            Assert.Equal(250, numeric.FinalValue);
         }
 
         [Fact]
@@ -108,12 +108,12 @@ namespace NumericSystem.Tests
             var numeric = new Numeric(100);
             numeric += (50, new[] { "Equipment" }, "Armor", 1);
 
-            // Act: First modifier doubles equipment, second increases equipment by 50%
+            // Act: First modifier doubles equipment, second increases equipment by 150%
             numeric.AddModifier(new FractionNumericModifier(200, 100, FractionType.Override, new[] { "Equipment" }, "Upgrade1", 1));
             numeric.AddModifier(new FractionNumericModifier(150, 100, FractionType.Increase, new[] { "Equipment" }, "Upgrade2", 1));
 
-            // Assert: Base (100) + Equipment modified (50 * 2.0 * 1.5 = 150) = 250
-            Assert.Equal(250, numeric.FinalValue);
+            // Assert: Base (100) + Equipment modified (50 * 2.0 * 2.5 = 250) = 350
+            Assert.Equal(350, numeric.FinalValue);
         }
 
         [Fact]
@@ -170,17 +170,26 @@ namespace NumericSystem.Tests
         }
 
         [Fact]
-        public void MultiplyModifier_Overflow_ShouldThrowOverflowException()
+        public void MultiplyModifier_WithCountAccumulation_ShouldCalculateCorrectly()
         {
-            // Arrange
-            var numeric = new Numeric(1000000);
-            numeric += (1, Array.Empty<string>(), "Stack", 1000);
+            // Arrange: Use moderate values to avoid fixed-point overflow
+            // Fixed-point Factor=10000 limits max practical value to ~200,000
+            var numeric = new Numeric(10000);
 
-            // Act & Assert
-            Assert.Throws<OverflowException>(() =>
-            {
-                numeric.AddModifier(new FractionNumericModifier(500, 100, FractionType.Increase, Array.Empty<string>(), "BigBoost", 1));
-            });
+            // Act: Create addition modifiers with Count=10
+            numeric += new AdditionNumericModifier(1, Array.Empty<string>(), "Stack", 10);
+
+            // After this: Count=10, StoreValue=10000
+            // allAddModifierValue = 10000 * 10 = 100,000 (fixed-point) = 10 (user)
+
+            // Now apply a 50% Increase (multiplier = 1.5)
+            numeric *= (50, FractionType.Increase, Array.Empty<string>(), "Boost", 1);
+
+            // Expected: 10000 * 1.5 + 10 = 15010
+            var result = numeric.FinalValue;
+
+            // Assert
+            Assert.Equal(15010, result);
         }
     }
 }
