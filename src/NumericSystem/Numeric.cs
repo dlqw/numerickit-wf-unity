@@ -148,38 +148,39 @@ namespace WFramework.CoreGameDevKit.NumericSystem
         private readonly HashSet<CustomNumericModifier> constraintModifier = new HashSet<CustomNumericModifier>();
 
         /// <summary>
-        /// 获取数值的原始基础值。
+        /// 获取数值的原始基础值（内部定点数形式）。
         /// </summary>
         /// <returns>
-        /// 数值的原始基础值，不受任何修饰符影响。
+        /// 数值的原始基础值，不受任何修饰符影响。返回值是内部定点数形式。
         /// </returns>
         /// <remarks>
         /// <para>
         /// 基础值在构造时设置且不可更改。要更改基础值，需要创建新的 Numeric 对象。
         /// </para>
         /// <para>
-        /// 返回值是内部定点数转换后的整数。
+        /// 返回值是内部定点数，主要用于内部计算。如需获取用户友好的普通整数值，
+        /// 请使用 <see cref="FinalValue"/> 或自行除以 <see cref="FixedPoint.Factor"/>。
         /// </para>
         /// </remarks>
         /// <example>
         /// <code>
         /// var numeric = new Numeric(100);
         /// numeric += 50;
-        /// int origin = numeric.GetOriginValue();  // 100（仍然返回原始值）
-        /// int final = numeric.FinalValue;        // 150
+        /// int origin = numeric.GetOriginValue();  // 1000000 (定点数)
+        /// int final = numeric.FinalValue;        // 150 (普通整数)
         /// </code>
         /// </example>
-        public int GetOriginValue() => originalValue / (int)FixedPoint.Factor;
+        public int GetOriginValue() => originalValue;
 
         /// <summary>
-        /// 获取所有加法修饰符的累积值。
+        /// 获取所有加法修饰符的累积值（内部定点数）。
         /// </summary>
         /// <returns>
-        /// 所有加法修饰符的累积效果（StoreValue × Count 之和），转换为普通整数。
+        /// 所有加法修饰符的累积效果（StoreValue × Count 之和），以定点数形式返回。
         /// </returns>
         /// <remarks>
         /// 此方法仅计算加法修饰符，不包括分数修饰符和自定义修饰符的效果。
-        /// 返回值已从定点数转换为普通整数。
+        /// 返回值是内部定点数形式，主要用于内部计算。
         /// </remarks>
         public int GetAddModifierValue()
         {
@@ -188,22 +189,22 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             {
                 if (mod.Type == ModifierType.Add)
                 {
-                    sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue / (int)FixedPoint.Factor;
+                    sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue;
                 }
             }
             return sum;
         }
 
         /// <summary>
-        /// 获取具有指定标签的加法修饰符的累积值。
+        /// 获取具有指定标签的加法修饰符的累积值（内部定点数）。
         /// </summary>
         /// <param name="tags">标签数组，用于筛选修饰符。</param>
         /// <returns>
-        /// 所有 Tags 与指定标签有交集的加法修饰符的累积效果，转换为普通整数。
+        /// 所有 Tags 与指定标签有交集的加法修饰符的累积效果，以定点数形式返回。
         /// </returns>
         /// <remarks>
         /// 如果修饰符的 Tags 数组与指定标签数组有任何重叠，则计入计算。
-        /// 返回值已从定点数转换为普通整数。
+        /// 返回值是内部定点数形式，主要用于内部计算。
         /// </remarks>
         public int GetAddModifierValueByTag(string[] tags)
         {
@@ -232,7 +233,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
 
                     if (hasMatch)
                     {
-                        sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue / (int)FixedPoint.Factor;
+                        sum += mod.Info.Count * ((AdditionNumericModifier)mod).StoreValue;
                     }
                 }
             }

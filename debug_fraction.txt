@@ -1,0 +1,14 @@
+Fraction测试分析：
+- 创建Numeric(100) - originValue = 1000000
+- 添加Bonus: 50 - StoreValue = 500000, Tags=["Bonus"]
+- 添加Fraction修饰符: numerator=150, denominator=100, Tags=["SELF"]
+
+问题：
+- hasSelfTag = Info.Tags.Contains("SELF") = true
+- targetAddModifierValue = GetAddModifierValueByTag(["SELF"]) = 0（因为Bonus的Tags是["Bonus"]）
+- targetedBaseValue = (true ? originValue : 0) + targetAddModifierValue = originValue + 0 = 1000000
+- untargetedBaseValue = baseValue - targetedBaseValue = (1000000 + 500000) - 1000000 = 500000
+- modifiedTargetedValue = GetIncrease(1000000) = 1000000 * (1 + 150/100) = 2000000
+- result = untargetedBaseValue + modifiedTargetedValue = 500000 + 2000000 = 2500000 → /10000 = 250
+
+但实际是300...让我重新检查GetIncrease的计算。

@@ -85,6 +85,7 @@ namespace WFramework.CoreGameDevKit.NumericSystem
             // the cumulative result of all previous modifiers. We only need to adjust
             // the portions that this modifier is responsible for.
 
+            // GetOriginValue() 和 GetAddModifierValue*() 现在返回定点数
             var originValue = numeric.GetOriginValue();
             var targetAddModifierValue = numeric.GetAddModifierValueByTag(Info.Tags);
             var allAddModifierValue = numeric.GetAddModifierValue();
