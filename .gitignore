@@ -73,6 +73,10 @@ Desktop.ini
 .claude/
 CLAUDE.md
 
+# Planning documents
+docs/plans/
+docs/reports/
+
 # Test Results
 TestResults/
 *.trx
